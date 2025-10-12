@@ -1,0 +1,693 @@
+/* Copiado integralmente do estilo original (mantive todos os estilos e adicionei pequenos ajustes visuais para timeline e histórico) */
+:root {
+    --primary-color: #28a745; /* Verde principal */
+    --secondary-color: #007bff; /* Azul secundário */
+    --accent-color: #ffc107; /* Amarelo de destaque/alerta */
+    --danger-color: #dc3545; /* Vermelho para ações perigosas */
+    --info-color: #17a2b8; /* Ciano para info/detalhes */
+
+    --bg-light: #f4f7f6; /* Fundo geral claro */
+    --bg-card: #ffffff; /* Fundo de cartões/componentes */
+    --text-dark: #333;
+    --text-medium: #555;
+    --text-light: #6c757d;
+
+    --border-color: #eee;
+    --shadow-light: 0 2px 5px rgba(0,0,0,0.08);
+    --shadow-medium: 0 5px 15px rgba(0,0,0,0.1);
+
+    --spacing-xs: 5px;
+    --spacing-sm: 10px;
+    --spacing-md: 20px;
+    --spacing-lg: 30px;
+}
+
+body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    margin: 0;
+    padding: 0;
+    background-color: var(--bg-light);
+    color: var(--text-dark);
+    line-height: 1.6;
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+}
+
+header {
+    background-color: var(--primary-color);
+    color: white;
+    padding: var(--spacing-md) var(--spacing-lg);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    box-shadow: var(--shadow-light);
+    flex-wrap: wrap;
+}
+
+header h1 {
+    margin: 0;
+    font-size: 1.8rem;
+}
+
+nav ul {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+}
+
+nav ul li {
+    margin: var(--spacing-xs) var(--spacing-sm);
+}
+
+.nav-link {
+    color: white;
+    text-decoration: none;
+    font-weight: bold;
+    padding: var(--spacing-xs) var(--spacing-sm);
+    border-radius: 5px;
+    transition: background-color 0.3s ease;
+}
+
+.nav-link:hover,
+.nav-link.active {
+    background-color: rgba(255, 255, 255, 0.2);
+}
+
+main {
+    flex-grow: 1;
+    padding: var(--spacing-md);
+    max-width: 1200px;
+    margin: var(--spacing-md) auto;
+    background-color: var(--bg-card);
+    border-radius: 8px;
+    box-shadow: 0 0 10px rgba(0,0,0,0.05);
+}
+
+.page-section {
+    display: none;
+    padding: var(--spacing-md) 0;
+}
+
+.page-section.active {
+    display: block;
+}
+
+h2 {
+    color: var(--primary-color);
+    border-bottom: 2px solid var(--border-color);
+    padding-bottom: var(--spacing-sm);
+    margin-bottom: var(--spacing-md);
+}
+
+h3 {
+    color: var(--text-medium);
+    margin-top: 0;
+}
+
+p {
+    color: var(--text-dark);
+}
+
+.help-text {
+    font-size: 0.85em;
+    color: var(--text-light);
+    margin-top: -10px;
+    margin-bottom: var(--spacing-sm);
+    display: block;
+}
+
+button {
+    padding: var(--spacing-sm) var(--spacing-md);
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 1rem;
+    transition: background-color 0.3s ease, transform 0.1s ease;
+    margin-right: var(--spacing-sm);
+    margin-bottom: var(--spacing-sm);
+}
+
+button:hover {
+    transform: translateY(-1px);
+}
+
+.btn-primary {
+    background-color: var(--primary-color);
+    color: white;
+}
+
+.btn-primary:hover {
+    background-color: #218838;
+}
+
+.btn-secondary {
+    background-color: var(--text-light);
+    color: white;
+}
+
+.btn-secondary:hover {
+    background-color: #5a6268;
+}
+
+.btn-success {
+    background-color: var(--primary-color);
+    color: white;
+}
+
+.btn-success:hover {
+    background-color: #218838;
+}
+
+.btn-danger {
+    background-color: var(--danger-color);
+    color: white;
+}
+
+.btn-danger:hover {
+    background-color: #c82333;
+}
+
+.btn-info {
+    background-color: var(--info-color);
+    color: white;
+}
+
+.btn-info:hover {
+    background-color: #138496;
+}
+
+form {
+    background-color: var(--bg-card);
+    padding: var(--spacing-md);
+    border-radius: 8px;
+    box-shadow: var(--shadow-light);
+    margin-bottom: var(--spacing-lg);
+}
+
+form label {
+    display: block;
+    margin-bottom: var(--spacing-xs);
+    font-weight: bold;
+    color: var(--text-medium);
+}
+
+form input[type="text"],
+form input[type="number"],
+form input[type="date"],
+form input[type="time"],
+form input[type="email"],
+form input[type="password"],
+form input[type="url"],
+form select,
+form textarea {
+    width: calc(100% - 20px);
+    padding: var(--spacing-sm);
+    margin-bottom: var(--spacing-md);
+    border: 1px solid var(--border-color);
+    border-radius: 5px;
+    font-size: 1rem;
+    box-sizing: border-box;
+}
+
+form input[type="checkbox"] {
+    margin-right: var(--spacing-xs);
+}
+
+.form-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--spacing-md);
+    margin-bottom: var(--spacing-md);
+    align-items: flex-end;
+}
+
+.form-group {
+    flex: 1;
+    min-width: 200px;
+}
+
+.dashboard-widgets {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--spacing-md);
+    justify-content: space-around;
+    margin-bottom: var(--spacing-lg);
+}
+
+.widget {
+    background-color: var(--bg-card);
+    padding: var(--spacing-md);
+    border-radius: 8px;
+    box-shadow: var(--shadow-light);
+    flex: 1;
+    min-width: 220px;
+    max-width: 300px;
+    text-align: center;
+}
+
+.widget h3 {
+    color: var(--primary-color);
+    margin-bottom: var(--spacing-sm);
+}
+
+.widget p {
+    font-size: 1.8rem;
+    font-weight: bold;
+    color: var(--text-dark);
+    margin: 0;
+}
+
+.alert-widget {
+    border: 1px solid var(--accent-color);
+}
+
+.alert-widget h3 {
+    color: var(--accent-color);
+}
+
+.small-text {
+    font-size: 0.8em;
+    color: var(--text-light);
+}
+
+.task-list-mini {
+    list-style: none;
+    padding: 0;
+    margin-top: var(--spacing-sm);
+    text-align: left;
+}
+
+.task-list-mini li {
+    background-color: var(--bg-light);
+    padding: var(--spacing-xs) var(--spacing-sm);
+    border-radius: 4px;
+    margin-bottom: var(--spacing-xs);
+    color: var(--text-medium);
+    font-size: 0.9em;
+}
+
+.charts-container {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--spacing-md);
+    justify-content: space-around;
+    margin-bottom: var(--spacing-lg);
+}
+
+.chart-box {
+    background-color: var(--bg-card);
+    padding: var(--spacing-md);
+    border-radius: 8px;
+    box-shadow: var(--shadow-light);
+    flex: 1;
+    min-width: 300px;
+    max-width: 500px;
+}
+
+.filter-controls {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--spacing-md);
+    align-items: center;
+    margin-bottom: var(--spacing-md);
+    background-color: var(--bg-light);
+    padding: var(--spacing-md);
+    border-radius: 8px;
+}
+
+.filter-controls label {
+    font-weight: bold;
+    color: var(--text-medium);
+}
+
+.filter-controls select,
+.filter-controls input[type="search"] {
+    padding: var(--spacing-sm);
+    border: 1px solid var(--border-color);
+    border-radius: 5px;
+    font-size: 1rem;
+}
+
+.animal-list table,
+.task-list table,
+.producao-leite-table table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: var(--spacing-md);
+    background-color: var(--bg-card);
+    box-shadow: var(--shadow-light);
+    border-radius: 8px;
+    overflow: hidden;
+}
+
+.table-responsive {
+    overflow-x: auto;
+}
+
+th, td {
+    padding: var(--spacing-sm) var(--spacing-md);
+    text-align: left;
+    border-bottom: 1px solid var(--border-color);
+}
+
+th {
+    background-color: var(--primary-color);
+    color: white;
+    font-weight: bold;
+    text-transform: uppercase;
+    font-size: 0.9em;
+}
+
+tr:nth-child(even) {
+    background-color: var(--bg-light);
+}
+
+tr:hover {
+    background-color: #e9ecef;
+}
+
+td .btn-small {
+    padding: var(--spacing-xs) var(--spacing-sm);
+    font-size: 0.85rem;
+    margin-right: var(--spacing-xs);
+}
+
+.animal-photo-thumbnail {
+    width: 40px; /* Tamanho da miniatura */
+    height: 40px;
+    border-radius: 50%; /* Circular */
+    object-fit: cover; /* Garante que a imagem preencha o espaço sem distorcer */
+    border: 1px solid var(--border-color);
+    vertical-align: middle;
+}
+
+.task-list ul {
+    list-style: none;
+    padding: 0;
+}
+
+.task-list li {
+    background-color: var(--bg-card);
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    padding: var(--spacing-md);
+    margin-bottom: var(--spacing-sm);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    box-shadow: var(--shadow-light);
+    flex-wrap: wrap;
+}
+
+.task-list li.completed {
+    background-color: #e0ffe0;
+    border-color: #c0fcc0;
+    text-decoration: line-through;
+    color: var(--text-light);
+}
+
+.task-info {
+    flex-grow: 1;
+    margin-right: var(--spacing-md);
+}
+
+.task-info h4 {
+    margin: 0 0 var(--spacing-xs) 0;
+    color: var(--primary-color);
+}
+
+.task-actions {
+    display: flex;
+    gap: var(--spacing-sm);
+    margin-top: var(--spacing-sm);
+}
+
+.modal {
+    display: none;
+    position: fixed;
+    z-index: 1000;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    overflow: auto;
+    background-color: rgba(0,0,0,0.4);
+    justify-content: center;
+    align-items: center;
+    padding: var(--spacing-md);
+}
+
+.modal.active {
+    display: flex;
+}
+
+.modal-content {
+    background-color: var(--bg-card);
+    margin: auto;
+    padding: var(--spacing-lg);
+    border: 1px solid #888;
+    border-radius: 8px;
+    width: 90%;
+    max-width: 800px;
+    box-shadow: var(--shadow-medium);
+    position: relative;
+}
+
+.close-modal-btn {
+    position: absolute;
+    top: var(--spacing-sm);
+    right: var(--spacing-sm);
+    background-color: transparent;
+    color: var(--text-light);
+    border: none;
+    font-size: 1.5rem;
+    cursor: pointer;
+    padding: var(--spacing-xs);
+}
+
+.close-modal-btn:hover {
+    color: var(--text-dark);
+}
+
+.modal-content h3 {
+    margin-top: 0;
+    color: var(--primary-color);
+    border-bottom: 1px solid var(--border-color);
+    padding-bottom: var(--spacing-sm);
+    margin-bottom: var(--spacing-md);
+}
+
+.details-content {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--spacing-md);
+    margin-bottom: var(--spacing-md);
+}
+
+.details-content div {
+    flex: 1;
+    min-width: 250px;
+}
+
+.details-content p {
+    margin-bottom: var(--spacing-sm);
+}
+
+.details-content strong {
+    color: var(--primary-color);
+}
+
+.details-image {
+    width: 100%;
+    max-width: 200px;
+    height: auto;
+    border-radius: 8px;
+    object-fit: cover;
+    margin-bottom: var(--spacing-sm);
+    box-shadow: var(--shadow-light);
+}
+
+/* Styles for photo capture/upload */
+.photo-upload-section {
+    margin-bottom: 15px;
+    border: 1px dashed var(--border-color);
+    padding: 15px;
+    border-radius: 8px;
+    text-align: center;
+}
+.photo-upload-section label {
+    margin-bottom: 10px;
+    display: block;
+}
+.photo-upload-section input[type="file"] {
+    display: block;
+    margin: 0 auto 10px auto;
+    width: auto;
+    padding: 0;
+}
+.photo-upload-section img#preview {
+    max-width: 100%;
+    max-height: 200px;
+    margin-top: 10px;
+    border: 1px solid #ddd;
+    display: none; /* Hidden by default until an image is loaded */
+}
+.photo-capture-section video {
+    width: 100%;
+    max-width: 320px; /* Smaller video for modal */
+    height: auto;
+    display: block;
+    margin: 10px auto;
+    border: 1px solid #ddd;
+    background-color: #000;
+}
+.photo-capture-section #loading {
+    text-align: center;
+    color: var(--text-light);
+    font-size: 0.9em;
+    display: none;
+}
+/* Hide camera elements by default, shown by JS */
+.photo-capture-section .camera-controls {
+    display: none;
+}
+
+/* Styles for Vaccines Section */
+.vaccines-section {
+    margin-top: var(--spacing-md);
+    padding-top: var(--spacing-md);
+    border-top: 1px solid var(--border-color);
+}
+
+.vaccine-item {
+    display: flex;
+    align-items: center;
+    margin-bottom: var(--spacing-sm);
+    gap: var(--spacing-sm);
+    flex-wrap: wrap;
+}
+
+.vaccine-item label {
+    margin-bottom: 0; /* Override default label margin */
+    flex-grow: 1; /* Allow label to take available space */
+}
+
+.vaccine-item input[type="checkbox"] {
+    margin-right: 0; /* Adjust checkbox margin */
+}
+
+.vaccine-item input[type="date"] {
+    width: auto; /* Allow date input to size itself */
+    max-width: 150px; /* Max width for date input */
+    margin-bottom: 0; /* Override default input margin */
+}
+
+/* Timeline and events */
+#detalhes-animal-timeline {
+    margin-top: 12px;
+    border-left: 3px solid var(--border-color);
+    padding-left: 12px;
+}
+.event-item {
+    margin-bottom: 8px;
+    padding: 6px 8px;
+    background: var(--bg-light);
+    border-radius: 6px;
+    font-size: 0.95rem;
+}
+
+/* Events list in form */
+.events-section {
+    margin-top: 12px;
+}
+#animal-events-list .event-mini {
+    background: #fff;
+    border: 1px solid var(--border-color);
+    padding: 6px 8px;
+    margin-bottom: 6px;
+    border-radius: 6px;
+}
+
+/* Small responsive tweaks */
+@media (max-width: 768px) {
+    header {
+        flex-direction: column;
+        text-align: center;
+        padding: var(--spacing-sm) var(--spacing-md);
+    }
+
+    header h1 {
+        font-size: 1.5rem;
+    }
+
+    nav ul {
+        flex-direction: column;
+        margin-top: var(--spacing-sm);
+    }
+
+    nav ul li {
+        margin: var(--spacing-xs) 0;
+    }
+
+    main {
+        padding: var(--spacing-sm);
+        margin: var(--spacing-sm) auto;
+    }
+
+    h2 {
+        font-size: 1.5rem;
+        margin-bottom: var(--spacing-md);
+    }
+
+    .dashboard-widgets,
+    .charts-container,
+    .filter-controls,
+    .leiteiro-controls,
+    .form-row {
+        flex-direction: column;
+        gap: var(--spacing-md);
+    }
+
+    .widget,
+    .chart-box,
+    .filter-controls input,
+    .filter-controls select,
+    .control-group,
+    .registro-leite,
+    .form-group {
+        width: 100%;
+        max-width: none;
+    }
+
+    form input[type="text"],
+    form input[type="number"],
+    form input[type="date"],
+    form input[type="time"],
+    form input[type="url"],
+    form select,
+    form textarea {
+        width: 100%;
+    }
+
+    .modal-content {
+        width: 95%;
+        padding: var(--spacing-md);
+    }
+
+    .details-content {
+        flex-direction: column;
+    }
+
+    .vaccine-item {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+    .vaccine-item input[type="date"] {
+        width: 100%;
+        max-width: none;
+    }
+}
