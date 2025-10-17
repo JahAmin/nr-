@@ -610,7 +610,8 @@
     // merge existing events with UI events without duplicates
     const existingAnimal = animais.find(a => a.id === assignedId);
     const existingEvents = existingAnimal ? (existingAnimal.events || []) : [];
-    const mergedEvents = mergeUniqueEvents(existingEvents, eventsFromUI);
+    // Adopt exactly what the user kept in the UI; allow removals
+    const mergedEvents = eventsFromUI;
 
     const animalObj = {
       id: assignedId,
@@ -967,9 +968,9 @@
       DOM.proximosPartosLista.innerHTML = '';
       const hoje = new Date();
       const seteDias = new Date(); seteDias.setDate(hoje.getDate() + 7);
-      const proximos = animais
-        .filter(a => a.dataCobertura)
-        .map(a => ({ a, parto: new Date(new Date(a.dataCobertura).getTime() + 290 * 24 * 60 * 60 * 1000) }))
+    const proximos = animais
+      .filter(a => a.dataCobertura)
+      .map(a => ({ a, parto: new Date(new Date(a.dataCobertura).getTime() + 290 * 24 * 60 * 60 * 1000) }))
         .filter(x => x.parto >= hoje && x.parto <= seteDias)
         .sort((x, y) => x.parto - y.parto);
       if (proximos.length === 0) {
@@ -988,9 +989,9 @@
       DOM.proximosCioLista.innerHTML = '';
       const hoje = new Date();
       const trintaDias = new Date(); trintaDias.setDate(hoje.getDate() + 30);
-      const proximos = animais
-        .filter(a => a.dataParto)
-        .map(a => ({ a, cio: new Date(new Date(a.dataParto).getTime() + 45 * 24 * 60 * 60 * 1000) }))
+    const proximos = animais
+      .filter(a => a.dataParto)
+      .map(a => ({ a, cio: new Date(new Date(a.dataParto).getTime() + 45 * 24 * 60 * 60 * 1000) }))
         .filter(x => x.cio >= hoje && x.cio <= trintaDias)
         .sort((x, y) => x.cio - y.cio);
       if (proximos.length === 0) {
@@ -1026,8 +1027,7 @@
     ]);
     const csv = [headers.join(','), ...rows.map(r => r.map(val => {
       const v = String(val).replaceAll('"', '""');
-      return /[",
-]/.test(v) ? `"${v}"` : v;
+      return (v.includes(',') || v.includes('"') || v.includes('\n')) ? `"${v}"` : v;
     }).join(','))].join('\n');
     const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
     const url = URL.createObjectURL(blob);
@@ -1038,7 +1038,8 @@
 
   function generateReportPdf() {
     try {
-      const jsPDF = window.jspdf?.jsPDF || window.jspdf?.jsPDF;
+      const jsPDFns = window.jspdf;
+      const jsPDF = jsPDFns && jsPDFns.jsPDF ? jsPDFns.jsPDF : null;
       if (!jsPDF) { showCustomAlert('Biblioteca jsPDF não carregada.'); return; }
       const doc = new jsPDF();
       const tipo = DOM.selectRelatorioTipo?.value || '';
@@ -1345,7 +1346,8 @@
     DOM.navLinks.forEach(link => {
       link.addEventListener('click', (event) => {
         event.preventDefault();
-        const targetId = event.target.getAttribute('href').substring(1);
+        const href = link.getAttribute('href') || '';
+        const targetId = href.startsWith('#') ? href.substring(1) : href;
         showSection(targetId);
       });
     });
@@ -1374,8 +1376,7 @@
     DOM.captureButton?.addEventListener('click', capturarImagem);
     DOM.cameraSelect?.addEventListener('change', (event) => startCamera(event.target.value));
 
-    // Events within animal form
-    if (DOM.btnAddEvent) DOM.btnAddEvent.addEventListener('click', () => DOM.animalEventsList.appendChild(createEventMini('observacao', new Date().toISOString().split('T')[0], '')));
+    // Events within animal form: handled via buildEventListUI to avoid double-binding
 
     // Tarefas
     DOM.btnNovaTarefa?.addEventListener('click', openTarefaForm);
@@ -1414,6 +1415,7 @@
     renderProximasTarefas();
     populateSelectVacaLactacao();
     populateTarefaAnimalSelect();
+    updateDashboard();
     if (DOM.leiteDataInput) DOM.leiteDataInput.value = new Date().toISOString().split('T')[0];
     if (DOM.tarefaData) DOM.tarefaData.value = new Date().toISOString().split('T')[0];
     if (DOM.btnImportarDados) DOM.btnImportarDados.disabled = true;
