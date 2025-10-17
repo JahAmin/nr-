@@ -114,6 +114,82 @@
     'Botulismo'
   ];
 
+  // ---------- Seed sample data (only on first load) ----------
+  function seedSampleData() {
+    try {
+      const todayStr = new Date().toISOString().split('T')[0];
+      // Create two sample animals
+      const femId = getNextIdAtomic();
+      const fem: any = {
+        id: femId,
+        brinco: 'BR-001',
+        nome: 'Estrela',
+        raca: 'Holandesa',
+        peso: 560,
+        dataNascimento: '2021-04-15',
+        sexo: 'femea',
+        statusReprodutivo: 'lactante',
+        dataParto: new Date(new Date().setDate(new Date().getDate() - 60)).toISOString().split('T')[0],
+        numPartos: 1,
+        numLactacoes: 1,
+        pai: null,
+        mae: null,
+        dataCobertura: null,
+        observacoes: 'Animal de alta produção',
+        observacoesClinicas: '',
+        fotoUrl: null,
+        producaoLeite: [],
+        vacinas: [],
+        events: []
+      } as any;
+      // Fill last 7 days production for sample
+      const periods = ['manha','tarde'];
+      for (let i = 6; i >= 0; i--) {
+        const d = new Date();
+        d.setDate(d.getDate() - i);
+        const ds = d.toISOString().split('T')[0];
+        periods.forEach((p) => {
+          fem.producaoLeite.push({ data: ds, periodo: p, quantidade: p === 'manha' ? 9.5 : 8.2 });
+        });
+      }
+
+      const machId = getNextIdAtomic();
+      const mach: any = {
+        id: machId,
+        brinco: 'BR-002',
+        nome: 'Trovão',
+        raca: 'Girolando',
+        peso: 780,
+        dataNascimento: '2020-11-03',
+        sexo: 'macho',
+        statusReprodutivo: 'touro',
+        dataParto: null,
+        numPartos: 0,
+        numLactacoes: 0,
+        pai: null,
+        mae: null,
+        dataCobertura: todayStr,
+        observacoes: '',
+        observacoesClinicas: '',
+        fotoUrl: null,
+        producaoLeite: [],
+        vacinas: [],
+        events: [{ type: 'cobertura', date: todayStr, details: 'Cobertura de fêmea do lote A' }]
+      } as any;
+
+      animais.push(fem, mach);
+
+      // Sample tasks
+      tarefas.push(
+        { id: 'T1', nome: 'Vacinar bezerros', data: todayStr, hora: '08:00', animalId: '', descricao: 'Aplicar vacina contra clostridiose', concluida: false },
+        { id: 'T2', nome: 'Revisar ordenha', data: todayStr, hora: '17:00', animalId: femId, descricao: 'Verificar produção e condições do úbere', concluida: false }
+      );
+      saveStorage();
+    } catch (err) {
+      console.warn('Falha ao criar dados de exemplo', err);
+    }
+  }
+
   // ---------- Persistence ----------
   function loadStorage() {
     try {
@@ -722,13 +798,384 @@
     });
   }
 
-  // ---------- Tarefas, dairy control, charts (kept as before) ----------
-  // For brevity these functions are the proven implementations and unchanged from previous working version:
-  // renderProximasTarefas, populateTarefaAnimalSelect, openTarefaForm, salvarTarefa, getNextTaskId,
-  // markTarefaConcluida, deleteTarefa, populateSelectVacaLactacao, renderProducaoLeiteHistorico,
-  // registrarProducaoLeite (which logs events), deleteMilkRecord, updateProducaoDiariaChart,
-  // updateDistribuicaoRebanhoChart, updateDashboard
-  // (They remain in place — the file continues with them unchanged; to keep this patch focused, we updated critical save/import/merge logic above.)
+  // ---------- Tarefas (Tasks) ----------
+  function getNextTaskId() {
+    const nums = tarefas
+      .map(t => (t.id || '').replace(/^T/, ''))
+      .map(v => parseInt(v, 10))
+      .filter(n => !isNaN(n));
+    const next = nums.length ? Math.max(...nums) + 1 : 1;
+    return `T${next}`;
+  }
+
+  function populateTarefaAnimalSelect() {
+    if (!DOM.tarefaAnimalSelect) return;
+    const sel = DOM.tarefaAnimalSelect;
+    sel.innerHTML = '<option value="">Nenhum</option>';
+    animais.forEach(a => {
+      const opt = document.createElement('option');
+      opt.value = a.id;
+      opt.textContent = `${a.nome} (${a.id})`;
+      sel.appendChild(opt);
+    });
+  }
+
+  function openTarefaForm() {
+    if (!DOM.modalTarefaForm) return;
+    if (DOM.tarefaForm) DOM.tarefaForm.reset();
+    populateTarefaAnimalSelect();
+    if (DOM.tarefaData) DOM.tarefaData.value = new Date().toISOString().split('T')[0];
+    if (DOM.tarefaHora) DOM.tarefaHora.value = '';
+    openModal(DOM.modalTarefaForm);
+  }
+
+  function salvarTarefa(event) {
+    event.preventDefault();
+    const nome = (DOM.tarefaNomeInput?.value || '').trim();
+    const data = DOM.tarefaData?.value || '';
+    const hora = DOM.tarefaHora?.value || '';
+    const animalId = DOM.tarefaAnimalSelect?.value || '';
+    const descricao = (DOM.tarefaDescricao?.value || '').trim();
+    if (!nome) { showInlineValidation(DOM.tarefaNomeInput, 'Nome obrigatório'); return; } else clearInlineValidation(DOM.tarefaNomeInput);
+    if (!data) { showInlineValidation(DOM.tarefaData, 'Data obrigatória'); return; } else clearInlineValidation(DOM.tarefaData);
+    const tarefa = { id: getNextTaskId(), nome, data, hora, animalId, descricao, concluida: false };
+    tarefas.push(tarefa);
+    saveStorage();
+    renderProximasTarefas();
+    closeModal(DOM.modalTarefaForm);
+    showCustomAlert('Tarefa salva com sucesso!');
+  }
+
+  function markTarefaConcluida(id) {
+    const idx = tarefas.findIndex(t => t.id === id);
+    if (idx > -1) {
+      tarefas[idx].concluida = true;
+      saveStorage();
+      renderProximasTarefas();
+      updateDashboard();
+    }
+  }
+
+  function deleteTarefa(id) {
+    showCustomConfirm('Excluir esta tarefa?', () => {
+      tarefas = tarefas.filter(t => t.id !== id);
+      saveStorage();
+      renderProximasTarefas();
+      updateDashboard();
+    });
+  }
+
+  function renderProximasTarefas() {
+    if (!DOM.proximasTarefasLista) return;
+    const upcoming = [...tarefas].sort((a, b) => {
+      const ad = new Date(`${a.data} ${a.hora || '00:00'}`);
+      const bd = new Date(`${b.data} ${b.hora || '00:00'}`);
+      return ad.getTime() - bd.getTime();
+    });
+    DOM.proximasTarefasLista.innerHTML = '';
+    if (upcoming.length === 0) {
+      DOM.proximasTarefasLista.innerHTML = '<li>Nenhuma tarefa pendente.</li>';
+    } else {
+      upcoming.forEach(t => {
+        const li = document.createElement('li');
+        const animal = t.animalId ? animais.find(a => a.id === t.animalId) : null;
+        const animalTxt = animal ? `${animal.nome} (${animal.id})` : 'Nenhum';
+        li.innerHTML = `
+          <div class="task-info">
+            <h4>${t.nome}</h4>
+            <div>${formatDate(t.data)} ${t.hora || ''} — Animal: ${animalTxt}</div>
+            <div>${t.descricao || ''}</div>
+          </div>
+          <div class="task-actions">
+            ${t.concluida ? '<span class="small-text">Concluída</span>' : `<button class="btn-success btn-small" onclick="markTarefaConcluida('${t.id}')">Concluir</button>`}
+            <button class="btn-danger btn-small" onclick="deleteTarefa('${t.id}')">Excluir</button>
+          </div>
+        `;
+        if (t.concluida) li.classList.add('completed');
+        DOM.proximasTarefasLista.appendChild(li);
+      });
+    }
+    // Calendar placeholder list
+    if (DOM.listaTarefasCalendario) {
+      DOM.listaTarefasCalendario.innerHTML = '';
+      const monthTasks = upcoming.filter(t => !!t);
+      if (monthTasks.length === 0) {
+        DOM.listaTarefasCalendario.innerHTML = '<li>Nenhuma tarefa agendada neste mês.</li>';
+      } else {
+        monthTasks.forEach(t => {
+          const li = document.createElement('li');
+          li.textContent = `${formatDate(t.data)} ${t.hora || ''} — ${t.nome}`;
+          DOM.listaTarefasCalendario.appendChild(li);
+        });
+      }
+    }
+  }
+
+  // ---------- Controle Leiteiro ----------
+  function populateSelectVacaLactacao() {
+    if (!DOM.selectVacaLactacao) return;
+    DOM.selectVacaLactacao.innerHTML = '<option value="">Selecione uma vaca lactante</option>';
+    animais
+      .filter(a => a.sexo === 'femea' && a.statusReprodutivo === 'lactante')
+      .forEach(a => {
+        const opt = document.createElement('option');
+        opt.value = a.id;
+        opt.textContent = `${a.nome} (${a.id})`;
+        DOM.selectVacaLactacao.appendChild(opt);
+      });
+  }
+
+  function renderProducaoLeiteHistorico(animalId) {
+    if (!DOM.producaoLeiteTbody) return;
+    const animal = animais.find(a => a.id === animalId);
+    if (!animal) {
+      DOM.producaoLeiteTbody.innerHTML = '<tr><td colspan="4">Selecione uma vaca para ver o histórico de produção.</td></tr>';
+      return;
+    }
+    const rows = (animal.producaoLeite || []).slice().sort((a, b) => {
+      const ka = `${a.data} ${a.periodo}`;
+      const kb = `${b.data} ${b.periodo}`;
+      return ka.localeCompare(kb); // simple sort date+periodo
+    });
+    if (rows.length === 0) {
+      DOM.producaoLeiteTbody.innerHTML = '<tr><td colspan="4">Sem registos.</td></tr>';
+      return;
+    }
+    DOM.producaoLeiteTbody.innerHTML = '';
+    rows.forEach((r, idx) => {
+      const tr = document.createElement('tr');
+      tr.innerHTML = `
+        <td>${formatDate(r.data)}</td>
+        <td>${r.periodo === 'manha' ? 'Manhã' : 'Tarde'}</td>
+        <td>${Number(r.quantidade).toFixed(1)}</td>
+        <td><button class="btn-danger btn-small" onclick="deleteMilkRecord('${animal.id}', ${idx})">Excluir</button></td>
+      `;
+      DOM.producaoLeiteTbody.appendChild(tr);
+    });
+  }
+
+  function registrarProducaoLeite() {
+    const animalId = DOM.selectVacaLactacao?.value || '';
+    const quantidade = parseFloat(DOM.leiteQuantidadeInput?.value || '');
+    const data = DOM.leiteDataInput?.value || '';
+    const periodo = DOM.leitePeriodoSelect?.value || '';
+    if (!animalId) { showCustomAlert('Selecione a vaca.'); return; }
+    if (!data) { showInlineValidation(DOM.leiteDataInput, 'Data obrigatória'); return; } else clearInlineValidation(DOM.leiteDataInput);
+    if (!periodo) { showInlineValidation(DOM.leitePeriodoSelect, 'Período obrigatório'); return; } else clearInlineValidation(DOM.leitePeriodoSelect);
+    if (isNaN(quantidade) || quantidade <= 0) { showInlineValidation(DOM.leiteQuantidadeInput, 'Quantidade inválida'); return; } else clearInlineValidation(DOM.leiteQuantidadeInput);
+    const animal = animais.find(a => a.id === animalId);
+    if (!animal) { showCustomAlert('Animal não encontrado.'); return; }
+    if (!Array.isArray(animal.producaoLeite)) animal.producaoLeite = [];
+    animal.producaoLeite.push({ data, periodo, quantidade });
+    // log event
+    if (!Array.isArray(animal.events)) animal.events = [];
+    animal.events.push({ type: 'producao', date: data, details: `${periodo} — ${quantidade.toFixed(1)} L` });
+    saveStorage();
+    renderProducaoLeiteHistorico(animalId);
+    updateProducaoDiariaChart();
+    showCustomAlert('Produção registada!');
+  }
+
+  function deleteMilkRecord(animalId, index) {
+    const animal = animais.find(a => a.id === animalId);
+    if (!animal) return;
+    showCustomConfirm('Excluir registo de produção?', () => {
+      if (Array.isArray(animal.producaoLeite)) {
+        animal.producaoLeite.splice(index, 1);
+      }
+      saveStorage();
+      renderProducaoLeiteHistorico(animalId);
+      updateProducaoDiariaChart();
+    });
+  }
+
+  // ---------- Charts & Dashboard ----------
+  let chartProducaoDiaria = null;
+  let chartDistribuicaoRebanho = null;
+
+  function updateProducaoDiariaChart() {
+    if (!DOM.producaoDiariaChartCanvas || typeof Chart === 'undefined') return;
+    const labels = [];
+    const sums = [];
+    for (let i = 6; i >= 0; i--) {
+      const d = new Date();
+      d.setDate(d.getDate() - i);
+      const ds = d.toISOString().split('T')[0];
+      labels.push(formatDate(ds));
+      let total = 0;
+      animais.forEach(a => {
+        (a.producaoLeite || []).forEach(r => { if (r.data === ds) total += Number(r.quantidade) || 0; });
+      });
+      sums.push(Number(total.toFixed(1)));
+    }
+    const ctx = DOM.producaoDiariaChartCanvas.getContext('2d');
+    const color = varToRgb('--primary-color', 0.7);
+    if (chartProducaoDiaria) chartProducaoDiaria.destroy();
+    chartProducaoDiaria = new Chart(ctx, {
+      type: 'line',
+      data: {
+        labels,
+        datasets: [{ label: 'Litros', data: sums, tension: 0.3, borderColor: color, backgroundColor: varToRgb('--primary-color', 0.15), fill: true }]
+      },
+      options: { responsive: true, plugins: { legend: { display: true } } }
+    });
+  }
+
+  function updateDistribuicaoRebanhoChart() {
+    if (!DOM.distribuicaoRebanhoChartCanvas || typeof Chart === 'undefined') return;
+    const categorias = ['lactante','seca','prenha','novilha','recria','cria','touro','rufao','indefinida'];
+    const labels = ['Lactantes','Secas','Prenhas','Novilhas','Recrias','Crias','Touros','Rufões','Indef.'];
+    const data = categorias.map(c => animais.filter(a => a.statusReprodutivo === c).length);
+    const ctx = DOM.distribuicaoRebanhoChartCanvas.getContext('2d');
+    if (chartDistribuicaoRebanho) chartDistribuicaoRebanho.destroy();
+    chartDistribuicaoRebanho = new Chart(ctx, {
+      type: 'doughnut',
+      data: {
+        labels,
+        datasets: [{ data, backgroundColor: [
+          varToRgb('--primary-color', 0.8),
+          varToRgb('--info-color', 0.8),
+          varToRgb('--accent-color', 0.8),
+          'rgba(153,102,255,0.8)',
+          'rgba(255,159,64,0.8)',
+          'rgba(201, 203, 207, 0.8)',
+          'rgba(255, 99, 132, 0.8)',
+          'rgba(75, 192, 192, 0.8)',
+          'rgba(54, 162, 235, 0.8)'
+        ] }]
+      },
+      options: { responsive: true, plugins: { legend: { display: true } } }
+    });
+  }
+
+  function updateDashboard() {
+    // totals
+    if (DOM.totalAnimais) DOM.totalAnimais.textContent = String(animais.length);
+    const lactantes = animais.filter(a => a.statusReprodutivo === 'lactante').length;
+    if (DOM.vacasLactacao) DOM.vacasLactacao.textContent = String(lactantes);
+    const pendentes = tarefas.filter(t => !t.concluida).length;
+    if (DOM.tarefasPendentes) DOM.tarefasPendentes.textContent = String(pendentes);
+
+    // próximos partos (dataCobertura + 290 dias)
+    if (DOM.proximosPartosLista) {
+      const hoje = new Date();
+      const seteDias = new Date(); seteDias.setDate(hoje.getDate() + 7);
+      const proximos = animais.filter(a => a.dataCobertura).map(a => {
+        const d = new Date(a.dataCobertura);
+        d.setDate(d.getDate() + 290);
+        return { animal: a, data: d };
+      }).filter(x => x.data >= hoje && x.data <= seteDias)
+        .sort((a, b) => a.data.getTime() - b.data.getTime());
+      DOM.proximosPartosLista.innerHTML = '';
+      if (proximos.length === 0) {
+        DOM.proximosPartosLista.innerHTML = '<li>Nenhuma vaca com parto previsto para os próximos 7 dias.</li>';
+      } else {
+        proximos.forEach(x => {
+          const li = document.createElement('li');
+          const ds = x.data.toISOString().split('T')[0];
+          li.textContent = `${x.animal.nome} (${x.animal.id}) — ${formatDate(ds)}`;
+          DOM.proximosPartosLista.appendChild(li);
+        });
+      }
+    }
+
+    // próximos cio (dataParto + 45 dias)
+    if (DOM.proximosCioLista) {
+      const hoje = new Date();
+      const trintaDias = new Date(); trintaDias.setDate(hoje.getDate() + 30);
+      const proximos = animais.filter(a => a.dataParto).map(a => {
+        const d = new Date(a.dataParto);
+        d.setDate(d.getDate() + 45);
+        return { animal: a, data: d };
+      }).filter(x => x.data >= hoje && x.data <= trintaDias)
+        .sort((a, b) => a.data.getTime() - b.data.getTime());
+      DOM.proximosCioLista.innerHTML = '';
+      if (proximos.length === 0) {
+        DOM.proximosCioLista.innerHTML = '<li>Nenhuma vaca em cio previsto para os próximos 30 dias.</li>';
+      } else {
+        proximos.forEach(x => {
+          const li = document.createElement('li');
+          const ds = x.data.toISOString().split('T')[0];
+          li.textContent = `${x.animal.nome} (${x.animal.id}) — ${formatDate(ds)}`;
+          DOM.proximosCioLista.appendChild(li);
+        });
+      }
+    }
+
+    // update charts
+    updateProducaoDiariaChart();
+    updateDistribuicaoRebanhoChart();
+  }
+
+  // ---------- Relatórios / Exportações ----------
+  function generateReportPdf() {
+    const tipo = DOM.selectRelatorioTipo?.value || '';
+    if (!tipo) { showCustomAlert('Selecione um tipo de relatório.'); return; }
+    const jsPDF = window.jspdf?.jsPDF;
+    if (!jsPDF) { showCustomAlert('jsPDF não carregado. Verifique a internet.'); return; }
+    const doc = new jsPDF();
+    let head = [];
+    let body = [];
+    if (tipo === 'animais-geral') {
+      head = [['ID','Nome','Brinco','Raça','Sexo','Categoria']];
+      body = animais.map(a => [a.id, a.nome, a.brinco || '', a.raca || '', a.sexo === 'femea' ? 'Fêmea' : 'Macho', getStatusReprodutivoDisplay(a.statusReprodutivo)]);
+    } else if (tipo === 'producao-mensal') {
+      head = [['Data','Animal','Período','Litros']];
+      body = [];
+      animais.forEach(a => (a.producaoLeite || []).forEach(r => body.push([formatDate(r.data), `${a.nome} (${a.id})`, r.periodo, String(r.quantidade)])));
+    } else if (tipo === 'tarefas-pendentes') {
+      head = [['ID','Nome','Data','Hora','Animal','Descrição']];
+      body = tarefas.filter(t => !t.concluida).map(t => {
+        const animal = t.animalId ? animais.find(a => a.id === t.animalId) : null;
+        return [t.id, t.nome, formatDate(t.data), t.hora || '', animal ? `${animal.nome} (${animal.id})` : '', t.descricao || ''];
+      });
+    } else {
+      showCustomAlert('Tipo de relatório não suportado.');
+      return;
+    }
+    if (typeof doc.autoTable !== 'function') {
+      showCustomAlert('AutoTable não disponível para jsPDF.');
+      return;
+    }
+    doc.text('Relatório', 14, 14);
+    doc.autoTable({ head, body, startY: 20 });
+    doc.save(`relatorio-${tipo}.pdf`);
+  }
+
+  function exportToCsv() {
+    const tipo = DOM.selectRelatorioTipo?.value || '';
+    if (!tipo) { showCustomAlert('Selecione um tipo para exportação.'); return; }
+    let headers = [];
+    let rows = [];
+    if (tipo === 'animais-geral') {
+      headers = ['id','brinco','nome','raca','peso','dataNascimento','sexo','statusReprodutivo','dataParto','dataCobertura'];
+      rows = animais.map(a => [a.id, a.brinco || '', a.nome, a.raca || '', a.peso ?? '', a.dataNascimento || '', a.sexo, a.statusReprodutivo, a.dataParto || '', a.dataCobertura || '']);
+    } else if (tipo === 'producao-mensal') {
+      headers = ['data','animalId','animalNome','periodo','quantidade'];
+      rows = [];
+      animais.forEach(a => (a.producaoLeite || []).forEach(r => rows.push([r.data, a.id, a.nome, r.periodo, r.quantidade])));
+    } else if (tipo === 'tarefas-pendentes') {
+      headers = ['id','nome','data','hora','animalId','descricao','concluida'];
+      rows = tarefas.map(t => [t.id, t.nome, t.data, t.hora || '', t.animalId || '', t.descricao || '', t.concluida ? 'true' : 'false']);
+    } else {
+      showCustomAlert('Tipo de exportação não suportado.');
+      return;
+    }
+    const csv = [headers.join(',')].concat(rows.map(r => r.map(v => {
+      const s = String(v ?? '');
+      return /[",\n]/.test(s) ? '"' + s.replace(/"/g, '""') + '"' : s;
+    }).join(','))).join('\n');
+    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `export-${tipo}.csv`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+    showCustomAlert('CSV exportado!');
+  }
 
   // ---------- CSV import robust parser (improved) ----------
   function parseCsvRow(line) {
