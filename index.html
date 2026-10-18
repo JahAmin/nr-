@@ -909,6 +909,21 @@
         }
 
         #modal-relatorios-pdf .modal-content { max-width: 780px; }
+        #modal-preview-relatorio .modal-content {
+            width: min(96vw, 1100px);
+            max-width: 1100px;
+            height: min(92vh, 900px);
+            display: flex;
+            flex-direction: column;
+        }
+        #preview-relatorio-frame {
+            width: 100%;
+            flex: 1;
+            min-height: 300px;
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            background: #f1f5f9;
+        }
 
         .modal-close {
             position: absolute;
@@ -1532,7 +1547,9 @@
             <a href="#dashboard" class="nav-link active" data-section="dashboard"><i class="ph ph-chart-bar"></i> Dashboard</a>
             <a href="#animais" class="nav-link" data-section="animais"><i class="ph ph-list-numbers"></i> Animais</a>
             <a href="#producao" class="nav-link" data-section="producao"><i class="ph ph-bucket-simple"></i> Produção de Leite</a>
-            <a href="#saude" class="nav-link" data-section="saude"><i class="ph ph-calendar-check"></i> Saúde e Reprodução</a>
+            <a href="#saude" class="nav-link" data-section="saude"><i class="ph ph-first-aid"></i> Saúde</a>
+            <a href="#reproducao" class="nav-link" data-section="reproducao"><i class="ph ph-baby"></i> Reprodução</a>
+            <a href="#relatorios" class="nav-link" data-section="relatorios"><i class="ph ph-file-pdf"></i> Relatórios</a>
             <a href="#config" class="nav-link" data-section="config"><i class="ph ph-gear-six"></i> Configurações</a>
         </nav>
 
@@ -1752,6 +1769,11 @@
                 <div class="card">
                     <div class="card-header">Registrar Produção Diária</div>
                     <div class="card-body">
+                        <div class="form-group">
+                            <button type="button" id="btn-leite-voz" class="btn btn-info"><i class="ph ph-microphone"></i> Registrar por voz</button>
+                            <small>Diga o número ou nome do animal e a quantidade, por exemplo: “vaca 12, vinte litros”.</small>
+                            <div id="leite-voz-feedback" role="status" aria-live="polite" style="display:none; margin-top:0.5rem;"></div>
+                        </div>
                         <form id="leite-form">
                             <div class="form-group">
                                 <label for="leite-data-input">Data:</label>
@@ -1802,7 +1824,56 @@
         </section>
 
         <section id="saude" class="page-section">
-            <h2 class="section-title">Saúde e Reprodução (Tarefas)</h2>
+            <h2 class="section-title">Saúde Animal</h2>
+
+            <div class="dashboard-grid" style="grid-template-columns: 1fr 2fr;">
+                <div class="card">
+                    <div class="card-header">Adicionar Tarefa de Saúde</div>
+                    <div class="card-body">
+                        <form class="tarefa-form" data-tarefa-categoria="saude">
+                            <div class="form-group">
+                                <label for="tarefa-animal-saude">Animal:</label>
+                                <select id="tarefa-animal-saude" name="animalId" required></select>
+                            </div>
+                            <div class="form-group">
+                                <label for="tarefa-tipo-saude">Tipo:</label>
+                                <select id="tarefa-tipo-saude" name="tipo" required>
+                                    <option value="vacina">Vacinação</option>
+                                    <option value="vermifugo">Vermifugação</option>
+                                    <option value="outro">Outro cuidado de saúde</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label for="tarefa-data-saude">Data da tarefa:</label>
+                                <input type="date" id="tarefa-data-saude" name="data" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="tarefa-descricao-saude">Detalhes:</label>
+                                <textarea id="tarefa-descricao-saude" name="descricao" rows="3" required></textarea>
+                            </div>
+                            <button type="button" class="btn btn-info btn-voz-tarefa"><i class="ph ph-microphone"></i> Preencher por voz</button>
+                            <small>Fale o animal, o tipo, a data e os detalhes. Ex.: “animal 12, vacina, dia 20 de outubro, aftosa”.</small>
+                            <button type="submit" class="btn btn-primary"><i class="ph ph-plus"></i> Adicionar Tarefa</button>
+                        </form>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <div class="card-header">Tarefas de Saúde Pendentes</div>
+                    <div class="card-body">
+                        <div class="table-responsive">
+                            <table class="data-table">
+                                <thead><tr><th>Data</th><th>Animal</th><th>Tipo</th><th>Detalhes</th><th>Ações</th></tr></thead>
+                                <tbody id="tarefa-list-saude"></tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section id="reproducao" class="page-section">
+            <h2 class="section-title">Reprodução</h2>
 
             <div class="dashboard-grid" style="grid-template-columns: 1fr 2fr;">
                 <div class="card" style="grid-column: 1 / -1; border-left-color: var(--success-color);">
@@ -1850,61 +1921,52 @@
                                 <label for="parto-observacoes">Observações do Parto:</label>
                                 <textarea id="parto-observacoes" rows="2" placeholder="Ex: parto normal, assistência, condição do bezerro, retenção de placenta..."></textarea>
                             </div>
+                            <button type="button" id="btn-parto-voz" class="btn btn-info"><i class="ph ph-microphone"></i> Registrar parto por voz</button>
+                            <small>Fale a vaca, a data e o sexo do nascido. Ex.: “parto da vaca 12 hoje, nasceu fêmea, nome Luna, peso 32 quilos”.</small>
                             <button type="submit" class="btn btn-primary"><i class="ph ph-check-circle"></i> Confirmar Parto e Cadastrar Nascido</button>
                         </form>
                     </div>
                 </div>
 
                 <div class="card">
-                    <div class="card-header">Registrar Nova Tarefa</div>
+                    <div class="card-header">Adicionar Tarefa de Reprodução</div>
                     <div class="card-body">
-                        <form id="tarefa-form">
+                        <form class="tarefa-form" data-tarefa-categoria="reproducao">
                             <div class="form-group">
-                                <label for="tarefa-animal-select">Animal:</label>
-                                <select id="tarefa-animal-select" required>
-                                    </select>
+                                <label for="tarefa-animal-reproducao">Animal:</label>
+                                <select id="tarefa-animal-reproducao" name="animalId" required></select>
                             </div>
                             <div class="form-group">
-                                <label for="tarefa-tipo-select">Tipo de Tarefa/Evento:</label>
-                                <select id="tarefa-tipo-select" required>
-                                    <option value="vacina">Vacinação</option>
-                                    <option value="vermifugo">Vermifugação</option>
+                                <label for="tarefa-tipo-reproducao">Tipo:</label>
+                                <select id="tarefa-tipo-reproducao" name="tipo" required>
                                     <option value="cio">Previsão de Cio</option>
                                     <option value="parto">Previsão de Parto</option>
                                     <option value="cobertura">Cobertura/Inseminação</option>
                                     <option value="diagnostico">Diagnóstico de Gestação</option>
-                                    <option value="outro">Outro</option>
                                 </select>
                             </div>
                             <div class="form-group">
-                                <label for="tarefa-data">Data Limite/Previsão:</label>
-                                <input type="date" id="tarefa-data" required>
+                                <label for="tarefa-data-reproducao">Data da tarefa:</label>
+                                <input type="date" id="tarefa-data-reproducao" name="data" required>
                             </div>
                             <div class="form-group">
-                                <label for="tarefa-descricao">Detalhes:</label>
-                                <textarea id="tarefa-descricao" rows="3" required></textarea>
+                                <label for="tarefa-descricao-reproducao">Detalhes:</label>
+                                <textarea id="tarefa-descricao-reproducao" name="descricao" rows="3" required></textarea>
                             </div>
+                            <button type="button" class="btn btn-info btn-voz-tarefa"><i class="ph ph-microphone"></i> Preencher por voz</button>
+                            <small>Fale o animal, o tipo, a data e os detalhes. Ex.: “animal 12, cio, dia 20 de outubro, observar sinais”.</small>
                             <button type="submit" class="btn btn-primary"><i class="ph ph-plus"></i> Adicionar Tarefa</button>
                         </form>
                     </div>
                 </div>
 
                 <div class="card">
-                    <div class="card-header">Lista de Tarefas Pendentes</div>
+                    <div class="card-header">Tarefas de Reprodução Pendentes</div>
                     <div class="card-body">
                         <div class="table-responsive">
                             <table class="data-table">
-                                <thead>
-                                    <tr>
-                                        <th>Data</th>
-                                        <th>Animal</th>
-                                        <th>Tipo</th>
-                                        <th>Detalhes</th>
-                                        <th>Ações</th>
-                                    </tr>
-                                </thead>
-                                <tbody id="tarefa-list-tbody">
-                                    </tbody>
+                                <thead><tr><th>Data</th><th>Animal</th><th>Tipo</th><th>Detalhes</th><th>Ações</th></tr></thead>
+                                <tbody id="tarefa-list-reproducao"></tbody>
                             </table>
                         </div>
                     </div>
@@ -1988,9 +2050,16 @@
                     </div>
                 </div>
                 
+            </div>
+        </section>
+
+        <section id="relatorios" class="page-section">
+            <h2 class="section-title">Relatórios</h2>
+            <div class="dashboard-grid" style="grid-template-columns: 1fr;">
                 <div class="card">
-                    <div class="card-header">Relatórios</div>
+                    <div class="card-header"><i class="ph ph-file-pdf"></i> Relatórios em PDF</div>
                     <div class="card-body">
+                        <p>Gere relatórios do rebanho, da lactação, das tarefas e a ficha individual completa de cada animal.</p>
                         <button class="btn btn-info" id="btn-abrir-modal-relatorio"><i class="ph ph-file-pdf"></i> Gerar Relatório PDF</button>
                     </div>
                 </div>
@@ -2280,9 +2349,20 @@
                             <option value="quantitativo-rebanho">Quantitativo do Rebanho</option>
                             <option value="rebanho-geral">Rebanho Geral</option>
                             <option value="lactacao">Rebanho em Lactação</option>
+                            <option value="ficha-animal">Ficha do Animal</option>
                             <option value="tarefas-pendentes">Tarefas Pendentes</option>
                             <option value="tarefas-realizadas">Tarefas Realizadas</option>
                         </select>
+                    </div>
+
+                    <div id="filtros-ficha-animal" style="display: none; border-top: 1px dashed #ccc; padding-top: 15px; margin-top: 15px;">
+                        <h4>Ficha individual</h4>
+                        <div class="form-group">
+                            <label for="filtro-ficha-animal">Animal:</label>
+                            <select id="filtro-ficha-animal">
+                                <option value="">Selecione um animal...</option>
+                            </select>
+                        </div>
                     </div>
 
                     <div id="filtros-animais" style="display: none; border-top: 1px dashed #ccc; padding-top: 15px; margin-top: 15px;">
@@ -2360,8 +2440,21 @@
                         </div>
                     </div>
 
-                    <button type="submit" class="btn btn-primary" style="margin-top: 1.5rem;"><i class="ph ph-file-pdf"></i> Gerar Relatório</button>
+                    <button type="submit" class="btn btn-primary" style="margin-top: 1.5rem;"><i class="ph ph-eye"></i> Visualizar Prévia</button>
                 </form>
+            </div>
+        </div>
+
+        <div id="modal-preview-relatorio" class="modal" aria-labelledby="preview-relatorio-title">
+            <div class="modal-content">
+                <button type="button" class="modal-close" id="btn-fechar-preview-relatorio" aria-label="Fechar prévia">&times;</button>
+                <h3 id="preview-relatorio-title" style="color:var(--primary-color);">Prévia do Relatório</h3>
+                <p>Confira o documento antes de baixar o PDF.</p>
+                <iframe id="preview-relatorio-frame" title="Prévia do relatório em PDF"></iframe>
+                <div style="display:flex; justify-content:flex-end; gap:10px; flex-wrap:wrap; margin-top:1rem;">
+                    <button type="button" class="btn btn-secondary" id="btn-cancelar-preview-relatorio">Fechar</button>
+                    <button type="button" class="btn btn-primary" id="btn-baixar-preview-relatorio"><i class="ph ph-download-simple"></i> Baixar PDF</button>
+                </div>
             </div>
         </div>
 
@@ -2476,15 +2569,18 @@
             leitePeriodoSelect: document.getElementById('leite-periodo-select'),
             leiteVacaSelect: document.getElementById('leite-vaca-select'),
             leiteQuantidadeInput: document.getElementById('leite-quantidade-input'),
+            btnLeiteVoz: document.getElementById('btn-leite-voz'),
+            leiteVozFeedback: document.getElementById('leite-voz-feedback'),
             leiteListTbody: document.getElementById('leite-list-tbody'),
 
             // Tarefas (Saúde/Reprodução)
-            tarefaForm: document.getElementById('tarefa-form'),
-            tarefaAnimalSelect: document.getElementById('tarefa-animal-select'),
-            tarefaTipoSelect: document.getElementById('tarefa-tipo-select'),
-            tarefaData: document.getElementById('tarefa-data'),
-            tarefaDescricao: document.getElementById('tarefa-descricao'),
-            tarefaListTbody: document.getElementById('tarefa-list-tbody'),
+            tarefaForms: document.querySelectorAll('.tarefa-form'),
+            tarefaVoiceButtons: document.querySelectorAll('.btn-voz-tarefa'),
+            tarefaAnimalSelects: document.querySelectorAll('.tarefa-form [name="animalId"]'),
+            tarefaListBodies: {
+                saude: document.getElementById('tarefa-list-saude'),
+                reproducao: document.getElementById('tarefa-list-reproducao')
+            },
 
             // Parto / Nascimento
             partoForm: document.getElementById('parto-form'),
@@ -2496,6 +2592,7 @@
             partoBezerroPeso: document.getElementById('parto-bezerro-peso'),
             partoBezerroRaca: document.getElementById('parto-bezerro-raca'),
             partoObservacoes: document.getElementById('parto-observacoes'),
+            btnPartoVoz: document.getElementById('btn-parto-voz'),
 
             // Modal Animal View
             modalAnimalView: document.getElementById('modal-animal-view'),
@@ -2576,7 +2673,14 @@
             btnAbrirModalRelatorio: document.getElementById('btn-abrir-modal-relatorio'), // NOVO
             modalRelatoriosPdf: document.getElementById('modal-relatorios-pdf'), // NOVO
             formRelatorioPdf: document.getElementById('form-relatorio-pdf'), // NOVO
+            modalPreviewRelatorio: document.getElementById('modal-preview-relatorio'),
+            previewRelatorioFrame: document.getElementById('preview-relatorio-frame'),
+            btnFecharPreviewRelatorio: document.getElementById('btn-fechar-preview-relatorio'),
+            btnCancelarPreviewRelatorio: document.getElementById('btn-cancelar-preview-relatorio'),
+            btnBaixarPreviewRelatorio: document.getElementById('btn-baixar-preview-relatorio'),
             tipoRelatorioSelect: document.getElementById('tipo-relatorio-select'), // NOVO
+            filtrosFichaAnimal: document.getElementById('filtros-ficha-animal'),
+            filtroFichaAnimal: document.getElementById('filtro-ficha-animal'),
             filtrosAnimais: document.getElementById('filtros-animais'), // NOVO
             filtroAnimalRaca: document.getElementById('filtro-animal-raca'), // NOVO
             filtroAnimalCategoria: document.getElementById('filtro-animal-categoria'), // NOVO
@@ -2838,7 +2942,9 @@ function reclassifyHerdByAge() {
         function collectRelatorioFilters(tipo) {
             const filtros = {};
 
-            if (tipo === 'rebanho-geral' || tipo === 'lactacao') {
+            if (tipo === 'ficha-animal') {
+                filtros.animalId = Number(DOM.filtroFichaAnimal.value);
+            } else if (tipo === 'rebanho-geral' || tipo === 'lactacao') {
                 // Filtros de Animais
                 if (DOM.filtroAnimalRaca.value) filtros.raca = DOM.filtroAnimalRaca.value.trim();
                 if (DOM.filtroAnimalCategoria.value) filtros.categoria = DOM.filtroAnimalCategoria.value;
@@ -2862,6 +2968,20 @@ function reclassifyHerdByAge() {
             return filtros;
         }
 
+        function populateReportAnimalSelect() {
+            const select = DOM.filtroFichaAnimal;
+            select.innerHTML = '<option value="">Selecione um animal...</option>';
+            rebanhoData.animais
+                .slice()
+                .sort((a, b) => String(a.nome || '').localeCompare(String(b.nome || ''), 'pt-BR'))
+                .forEach(animal => {
+                    const option = document.createElement('option');
+                    option.value = String(animal.id);
+                    option.textContent = `${formatAnimalId(animal.id)} - ${animal.nome || 'Sem nome'}`;
+                    select.appendChild(option);
+                });
+        }
+
         // Função para mostrar/esconder filtros (NOVO)
         function toggleRelatorioFilters() {
             const tipo = DOM.tipoRelatorioSelect.value;
@@ -2870,9 +2990,12 @@ function reclassifyHerdByAge() {
             DOM.filtrosAnimais.style.display = 'none';
             DOM.filtrosLactacao.style.display = 'none';
             DOM.filtrosTarefas.style.display = 'none';
+            DOM.filtrosFichaAnimal.style.display = 'none';
 
             if (tipo === 'quantitativo-rebanho') {
                 // Sem filtros: relatório de visão geral quantitativa.
+            } else if (tipo === 'ficha-animal') {
+                DOM.filtrosFichaAnimal.style.display = 'block';
             } else if (tipo === 'rebanho-geral') {
                 DOM.filtrosAnimais.style.display = 'grid';
             } else if (tipo === 'lactacao') {
@@ -2899,6 +3022,9 @@ function reclassifyHerdByAge() {
             headerHeight: 34,
             footerHeight: 15
         };
+        let reportPreviewUrl = null;
+        let reportPreviewFileName = '';
+        let reportPreviewDocument = null;
 
         function safePdfText(value, fallback = 'N/D') {
             if (value === null || value === undefined || value === '') return fallback;
@@ -2926,6 +3052,7 @@ function reclassifyHerdByAge() {
                 'quantitativo-rebanho': 'Quantitativo do Rebanho',
                 'rebanho-geral': 'Rebanho Geral',
                 'lactacao': 'Rebanho em Lactação',
+                'ficha-animal': 'Ficha do Animal',
                 'tarefas-pendentes': 'Tarefas Pendentes',
                 'tarefas-realizadas': 'Tarefas Realizadas'
             };
@@ -3065,8 +3192,76 @@ function reclassifyHerdByAge() {
             let filtrosTexto = 'Nenhum filtro aplicado.';
             let subtitulo = 'Relatório gerado a partir dos dados cadastrados no aplicativo.';
             let metrics = [];
+            let animalFicha = null;
 
-            if (tipoRelatorio === 'quantitativo-rebanho') {
+            if (tipoRelatorio === 'ficha-animal') {
+                animalFicha = rebanhoData.animais.find(a => a.id === filtros.animalId) || null;
+                if (!animalFicha) {
+                    showCustomAlert('Animal não encontrado', 'Selecione um animal cadastrado para gerar a ficha.', 'warning');
+                    return { titulo, colunas: [], dados: [], filtrosTexto, subtitulo, metrics, animal: null };
+                }
+
+                colunas = ['Seção', 'Data', 'Registro', 'Detalhes'];
+                const statusAnimal = animalFicha.situacao || 'Ativo';
+                const dadosCadastro = [
+                    'Cadastro',
+                    animalFicha.dataNasc || '',
+                    `${formatAnimalId(animalFicha.id)} - ${animalFicha.nome || 'Sem nome'}`,
+                    `Sexo: ${animalFicha.sexo || 'N/D'}; Raça: ${animalFicha.raca || 'N/D'}; Categoria: ${animalFicha.categoria || 'N/D'}; Idade: ${calculateAge(animalFicha.dataNasc)}; Situação: ${statusAnimal}; Status reprodutivo: ${animalFicha.statusReprodutivo || 'N/D'}; Pai: ${parentDisplay(animalFicha.parentPaiId)}; Mãe: ${parentDisplay(animalFicha.parentMaeId)}`
+                ];
+                const historicoFicha = [];
+
+                const tarefasAnimal = rebanhoData.tarefas.filter(t => t.animalId === animalFicha.id);
+                const tiposReproducao = ['cio', 'parto', 'cobertura', 'diagnostico', 'secagem', 'nascimento'];
+                const historicoSaude = tarefasAnimal.filter(t => t.categoria === 'saude' || ['vacina', 'vermifugo'].includes(t.tipo));
+                const historicoReproducao = tarefasAnimal.filter(t => t.categoria === 'reproducao' || tiposReproducao.includes(t.tipo));
+
+                historicoSaude.forEach(tarefa => historicoFicha.push([
+                    'Saúde',
+                    tarefa.dataConclusao || tarefa.data || '',
+                    `${formatTipoTarefa(tarefa.tipo)} - ${tarefa.done ? 'Realizada' : 'Pendente'}`,
+                    tarefa.descricao || 'Sem detalhes'
+                ]));
+                historicoReproducao.forEach(tarefa => historicoFicha.push([
+                    'Reprodução',
+                    tarefa.dataConclusao || tarefa.data || '',
+                    `${formatTipoTarefa(tarefa.tipo)} - ${tarefa.done ? 'Realizada' : 'Pendente'}`,
+                    tarefa.descricao || 'Sem detalhes'
+                ]));
+                rebanhoData.lactacoes
+                    .filter(lactacao => lactacao.animalId === animalFicha.id)
+                    .forEach(lactacao => historicoFicha.push([
+                        'Reprodução',
+                        lactacao.dataInicio || '',
+                        'Parto / início da lactação',
+                        `Fim: ${formatDate(lactacao.dataFim)}; Total da lactação: ${Number(lactacao.totalLitros || 0).toFixed(2)} L; ${lactacao.observacoes || ''}`
+                    ]));
+                rebanhoData.producaoLeite
+                    .filter(registro => registro.animalId === animalFicha.id)
+                    .forEach(registro => historicoFicha.push([
+                        'Produção de leite',
+                        registro.data || '',
+                        registro.periodo || 'Registro diário',
+                        `${Number(registro.quantidade || 0).toFixed(2)} L`
+                    ]));
+
+                historicoFicha.sort((a, b) => String(a[1]).localeCompare(String(b[1])));
+                dados = [dadosCadastro, ...historicoFicha.map(row => [
+                    row[0],
+                    row[1] ? formatDate(row[1]) : 'N/D',
+                    row[2],
+                    row[3]
+                ])];
+                filtrosTexto = `${formatAnimalId(animalFicha.id)} - ${animalFicha.nome || 'Sem nome'}. Inclui todos os registros salvos de saúde, reprodução e produção de leite.`;
+                subtitulo = 'Ficha individual com identificação, fotografia, histórico sanitário e reprodutivo, lactações e produção de leite.';
+                metrics = [
+                    { label: 'Sexo', value: animalFicha.sexo || 'N/D' },
+                    { label: 'Categoria', value: animalFicha.categoria || 'N/D' },
+                    { label: 'Idade', value: calculateAge(animalFicha.dataNasc) },
+                    { label: 'Status reprodutivo', value: animalFicha.statusReprodutivo || 'N/D' }
+                ];
+
+            } else if (tipoRelatorio === 'quantitativo-rebanho') {
                 colunas = ['Indicador', 'Quantidade'];
                 const hoje = new Date();
                 const anoAtual = hoje.getFullYear();
@@ -3224,7 +3419,7 @@ function reclassifyHerdByAge() {
             }
 
             dados = dados.map(row => row.map(cell => safePdfText(cell)));
-            return { titulo, colunas, dados, filtrosTexto, subtitulo, metrics };
+            return { titulo, colunas, dados, filtrosTexto, subtitulo, metrics, animal: animalFicha };
         }
 
         async function generateReportPdf(tipoRelatorio, filtros = {}) {
@@ -3247,6 +3442,20 @@ function reclassifyHerdByAge() {
                 report.dados = [[`Nenhum registro encontrado para os filtros aplicados.`].concat(Array(Math.max(report.colunas.length - 1, 0)).fill(''))];
             }
 
+            let fichaPhotoJpeg = null;
+            if (tipoRelatorio === 'ficha-animal' && report.animal) {
+                const photo = getAnimalPhotos(report.animal)[0];
+                if (photo) {
+                    try {
+                        fichaPhotoJpeg = await imageDataUrlToJpeg(photo);
+                    } catch (error) {
+                        console.error('Não foi possível preparar a foto para a ficha do animal:', error);
+                        showCustomAlert('Erro na foto', 'Não foi possível incluir a foto do animal no PDF. Verifique a imagem cadastrada e tente novamente.', 'danger');
+                        return;
+                    }
+                }
+            }
+
             const isWide = report.colunas.length >= 7;
             const doc = new jsPDF({ orientation: isWide ? 'landscape' : 'portrait', unit: 'mm', format: 'a4', compress: true });
             const pageWidth = doc.internal.pageSize.getWidth();
@@ -3260,7 +3469,30 @@ function reclassifyHerdByAge() {
             });
 
             drawPdfBranding(doc, pageWidth, pageHeight, report.titulo);
-            const startY = drawReportIntro(doc, report.titulo, report.subtitulo, report.filtrosTexto, report.metrics, report.dados.length);
+            let tableStartY = drawReportIntro(doc, report.titulo, report.subtitulo, report.filtrosTexto, report.metrics, report.dados.length);
+            if (tipoRelatorio === 'ficha-animal') {
+                if (tableStartY + 47 > pageHeight - cfg.footerHeight - cfg.margin) {
+                    doc.addPage();
+                    drawPdfBranding(doc, pageWidth, pageHeight, report.titulo);
+                    tableStartY = cfg.headerHeight + 10;
+                }
+                doc.setDrawColor(cfg.border[0], cfg.border[1], cfg.border[2]);
+                doc.roundedRect(cfg.margin, tableStartY, 42, 42, 2, 2, 'S');
+                if (fichaPhotoJpeg) {
+                    const scale = Math.min(40 / fichaPhotoJpeg.width, 40 / fichaPhotoJpeg.height);
+                    const photoWidth = fichaPhotoJpeg.width * scale;
+                    const photoHeight = fichaPhotoJpeg.height * scale;
+                    const photoX = cfg.margin + 1 + (40 - photoWidth) / 2;
+                    const photoY = tableStartY + 1 + (40 - photoHeight) / 2;
+                    doc.addImage(fichaPhotoJpeg.dataUrl, 'JPEG', photoX, photoY, photoWidth, photoHeight, undefined, 'FAST');
+                } else {
+                    doc.setFont('helvetica', 'normal');
+                    doc.setFontSize(8);
+                    doc.setTextColor(cfg.muted[0], cfg.muted[1], cfg.muted[2]);
+                    doc.text(doc.splitTextToSize('Foto não cadastrada', 34), cfg.margin + 4, tableStartY + 21);
+                }
+                tableStartY += 47;
+            }
 
             const columnStyles = {};
             if (tipoRelatorio === 'rebanho-geral') {
@@ -3281,10 +3513,14 @@ function reclassifyHerdByAge() {
                 columnStyles[4] = { cellWidth: 22 };
             } else if (tipoRelatorio === 'quantitativo-rebanho') {
                 columnStyles[1] = { halign: 'right', cellWidth: 30 };
+            } else if (tipoRelatorio === 'ficha-animal') {
+                columnStyles[0] = { cellWidth: 28 };
+                columnStyles[1] = { cellWidth: 23 };
+                columnStyles[2] = { cellWidth: 42 };
             }
 
             doc.autoTable({
-                startY,
+                startY: tableStartY,
                 head: [report.colunas],
                 body: report.dados,
                 theme: 'grid',
@@ -3322,7 +3558,25 @@ function reclassifyHerdByAge() {
                 }
             });
 
-            const finalY = doc.lastAutoTable ? doc.lastAutoTable.finalY : startY;
+            let finalY = doc.lastAutoTable ? doc.lastAutoTable.finalY : tableStartY;
+            if (tipoRelatorio === 'ficha-animal' && report.animal) {
+                const chartHeight = 72;
+                if (finalY + 9 + chartHeight > pageHeight - cfg.footerHeight - cfg.margin) {
+                    doc.addPage();
+                    drawPdfBranding(doc, pageWidth, pageHeight, report.titulo);
+                    finalY = cfg.headerHeight + 10;
+                } else {
+                    finalY += 9;
+                }
+                finalY = drawAnimalMilkProductionChart(
+                    doc,
+                    report.animal.id,
+                    cfg.margin,
+                    finalY,
+                    pageWidth - (cfg.margin * 2),
+                    chartHeight
+                );
+            }
             if (finalY < pageHeight - 28) {
                 doc.setFont('helvetica', 'normal');
                 doc.setFontSize(8);
@@ -3330,7 +3584,143 @@ function reclassifyHerdByAge() {
                 doc.text('Observação: relatórios consideram os dados salvos localmente neste navegador no momento da emissão.', cfg.margin, finalY + 8);
             }
 
-            doc.save(getReportFileName(tipoRelatorio));
+            const pdfBlob = doc.output('blob');
+            openReportPdfPreview(pdfBlob, getReportFileName(tipoRelatorio), report.titulo, doc);
+        }
+
+        function openReportPdfPreview(pdfBlob, fileName, reportTitle, pdfDocument) {
+            closeReportPdfPreview();
+            reportPreviewUrl = URL.createObjectURL(pdfBlob);
+            reportPreviewFileName = fileName;
+            reportPreviewDocument = pdfDocument;
+            DOM.previewRelatorioFrame.src = reportPreviewUrl;
+            document.getElementById('preview-relatorio-title').textContent = `Prévia: ${reportTitle}`;
+            DOM.modalRelatoriosPdf.style.display = 'none';
+            DOM.modalPreviewRelatorio.style.display = 'flex';
+        }
+
+        function closeReportPdfPreview() {
+            DOM.modalPreviewRelatorio.style.display = 'none';
+            DOM.previewRelatorioFrame.src = 'about:blank';
+            if (reportPreviewUrl) {
+                URL.revokeObjectURL(reportPreviewUrl);
+                reportPreviewUrl = null;
+            }
+            reportPreviewFileName = '';
+            reportPreviewDocument = null;
+        }
+
+        function downloadReportPdfPreview() {
+            if (!reportPreviewDocument || !reportPreviewFileName) {
+                showCustomAlert('Prévia indisponível', 'Gere novamente a prévia do relatório antes de baixar o PDF.', 'warning');
+                return;
+            }
+            reportPreviewDocument.save(reportPreviewFileName);
+        }
+
+        function drawAnimalMilkProductionChart(doc, animalId, x, y, width, height) {
+            const dailyProduction = rebanhoData.producaoLeite
+                .filter(registro => registro.animalId === animalId && registro.data)
+                .reduce((daily, registro) => {
+                    const amount = Number(registro.quantidade);
+                    if (Number.isFinite(amount)) daily[registro.data] = (daily[registro.data] || 0) + amount;
+                    return daily;
+                }, {});
+            const dates = Object.keys(dailyProduction).sort().slice(-30);
+            const cfg = PDF_REPORT_CONFIG;
+
+            doc.setFont('helvetica', 'bold');
+            doc.setFontSize(11);
+            doc.setTextColor(cfg.primaryDark[0], cfg.primaryDark[1], cfg.primaryDark[2]);
+            doc.text('Produção diária de leite (últimas 30 datas registradas)', x, y + 5);
+
+            if (!dates.length) {
+                doc.setDrawColor(cfg.border[0], cfg.border[1], cfg.border[2]);
+                doc.roundedRect(x, y + 9, width, height - 9, 2, 2, 'S');
+                doc.setFont('helvetica', 'normal');
+                doc.setFontSize(9);
+                doc.setTextColor(cfg.muted[0], cfg.muted[1], cfg.muted[2]);
+                doc.text('Não há registros de produção de leite para este animal.', x + 5, y + 22);
+                return y + height;
+            }
+
+            const values = dates.map(date => dailyProduction[date]);
+            const plot = { x: x + 15, y: y + 13, width: width - 20, height: height - 27 };
+            const maxValue = Math.max(...values);
+            const yMax = maxValue > 0 ? maxValue * 1.15 : 1;
+            const yLabelDigits = yMax >= 10 ? 0 : 1;
+
+            doc.setFont('helvetica', 'normal');
+            doc.setFontSize(7);
+            for (let tick = 0; tick <= 4; tick++) {
+                const value = yMax * tick / 4;
+                const tickY = plot.y + plot.height - (plot.height * tick / 4);
+                doc.setDrawColor(225, 232, 238);
+                doc.line(plot.x, tickY, plot.x + plot.width, tickY);
+                doc.setTextColor(cfg.muted[0], cfg.muted[1], cfg.muted[2]);
+                doc.text(value.toFixed(yLabelDigits), plot.x - 2, tickY + 1, { align: 'right' });
+            }
+
+            doc.setDrawColor(cfg.primary[0], cfg.primary[1], cfg.primary[2]);
+            doc.setLineWidth(0.45);
+            const points = values.map((value, index) => ({
+                x: dates.length === 1 ? plot.x + plot.width / 2 : plot.x + plot.width * index / (dates.length - 1),
+                y: plot.y + plot.height - value / yMax * plot.height
+            }));
+            for (let index = 1; index < points.length; index++) {
+                doc.line(points[index - 1].x, points[index - 1].y, points[index].x, points[index].y);
+            }
+            points.forEach(point => {
+                doc.setFillColor(cfg.primary[0], cfg.primary[1], cfg.primary[2]);
+                doc.circle(point.x, point.y, 0.8, 'F');
+            });
+
+            const labelCount = Math.min(6, dates.length);
+            const labelIndexes = new Set(Array.from({ length: labelCount }, (_, index) =>
+                labelCount === 1 ? 0 : Math.round(index * (dates.length - 1) / (labelCount - 1))
+            ));
+            doc.setFontSize(6.5);
+            doc.setTextColor(cfg.muted[0], cfg.muted[1], cfg.muted[2]);
+            labelIndexes.forEach(index => {
+                const align = index === 0 ? 'left' : (index === dates.length - 1 ? 'right' : 'center');
+                doc.text(formatDate(dates[index]), points[index].x, plot.y + plot.height + 5, { align });
+            });
+
+            doc.setFontSize(7);
+            doc.text('Litros (L)', x, plot.y + 2);
+            doc.setLineWidth(0.2);
+            return y + height;
+        }
+
+        function imageDataUrlToJpeg(dataUrl) {
+            return new Promise((resolve, reject) => {
+                const image = new Image();
+                image.onload = () => {
+                    const scale = Math.min(1, 1200 / Math.max(image.naturalWidth, image.naturalHeight));
+                    const canvas = document.createElement('canvas');
+                    canvas.width = Math.max(1, Math.round(image.naturalWidth * scale));
+                    canvas.height = Math.max(1, Math.round(image.naturalHeight * scale));
+                    const context = canvas.getContext('2d');
+                    if (!context) {
+                        reject(new Error('Não foi possível criar o contexto de imagem.'));
+                        return;
+                    }
+                    try {
+                        context.fillStyle = '#ffffff';
+                        context.fillRect(0, 0, canvas.width, canvas.height);
+                        context.drawImage(image, 0, 0, canvas.width, canvas.height);
+                        resolve({
+                            dataUrl: canvas.toDataURL('image/jpeg', 0.9),
+                            width: canvas.width,
+                            height: canvas.height
+                        });
+                    } catch (error) {
+                        reject(error);
+                    }
+                };
+                image.onerror = () => reject(new Error('A imagem cadastrada não pôde ser carregada.'));
+                image.src = dataUrl;
+            });
         }
 
         // ... (Restante do código JavaScript deve ser colado aqui, substituindo o original)
@@ -3990,6 +4380,172 @@ function reclassifyHerdByAge() {
             showCustomAlert('Sucesso', 'Produção de leite registrada!', 'success');
         }
 
+        function normalizeVoiceText(text) {
+            return text.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').trim();
+        }
+
+        function parseVoiceMilkQuantity(text) {
+            const cleaned = normalizeVoiceText(text).replace(/[.,;?!]+$/g, '').trim();
+            const spokenDecimal = cleaned.match(/^(.+?)\s+(?:virgula|ponto)\s+(.+)$/);
+            if (spokenDecimal) {
+                const whole = convertWordsToNumber(spokenDecimal[1]);
+                const fraction = convertWordsToNumber(spokenDecimal[2]);
+                if (whole !== null && fraction !== null) {
+                    const fractionDigits = fraction.replace(/\D/g, '');
+                    return parseFloat(`${whole}.${fractionDigits}`);
+                }
+            }
+
+            const numericValue = cleaned.replace(',', '.');
+            if (/^\d+(?:\.\d+)?$/.test(numericValue)) {
+                return parseFloat(numericValue);
+            }
+
+            const converted = convertWordsToNumber(cleaned);
+            return converted === null ? null : parseFloat(converted);
+        }
+
+        function parseVoiceMilkCommand(transcript) {
+            const cleaned = transcript.trim().replace(/[.;?!]+$/g, '').trim();
+            const match = cleaned.match(/^(.+)\s+(?:litros?|l)$/iu);
+            if (!match) return null;
+
+            const commandBody = match[1].trim();
+            let animalText = '';
+            let quantityText = '';
+            const separatorIndex = Math.max(commandBody.lastIndexOf(','), commandBody.lastIndexOf(':'));
+            if (separatorIndex >= 0 && !/\d,\d/.test(commandBody)) {
+                animalText = commandBody.slice(0, separatorIndex).trim();
+                quantityText = commandBody.slice(separatorIndex + 1).trim();
+            } else {
+                const tokens = commandBody.split(/\s+/);
+                for (let index = 1; index < tokens.length; index++) {
+                    const candidateQuantity = tokens.slice(index).join(' ');
+                    const isSingleNumericValue = /^\d+(?:[.,]\d+)?$/.test(candidateQuantity);
+                    if ((!/\d/.test(candidateQuantity) || isSingleNumericValue) && parseVoiceMilkQuantity(candidateQuantity) !== null) {
+                        animalText = tokens.slice(0, index).join(' ');
+                        quantityText = candidateQuantity;
+                        break;
+                    }
+                }
+            }
+
+            let animalQuery = normalizeVoiceText(animalText)
+                .replace(/^(?:(?:a|o)\s+)?(?:animal|vaca|boi|touro|novilha|novilho|bezerro|bezerra|brinco|numero|codigo|id)\s+/i, '')
+                .replace(/^(?:a|o)\s+/, '')
+                .replace(/\s+(?:produziu|produzir|deu|rendeu|com)\s*$/i, '')
+                .trim();
+            animalQuery = animalQuery.replace(/^(?:numero|codigo|id)\s+/i, '').trim();
+            const quantity = parseVoiceMilkQuantity(quantityText);
+            if (!animalQuery || quantity === null || !Number.isFinite(quantity) || quantity <= 0) return null;
+
+            return { animalQuery, quantity };
+        }
+
+        function findLactatingAnimalByVoice(query) {
+            const lactatingAnimals = getAnimaisAtivos().filter(animal => animal.statusReprodutivo === 'Em Lactação');
+            const normalizedQuery = normalizeVoiceText(query);
+            const spokenNumber = convertWordsToNumber(normalizedQuery);
+            const numericQuery = /^\d+$/.test(normalizedQuery)
+                ? String(parseInt(normalizedQuery, 10))
+                : spokenNumber;
+
+            if (numericQuery !== null) {
+                return lactatingAnimals.filter(animal => String(animal.id) === numericQuery);
+            }
+
+            const exactMatches = lactatingAnimals.filter(animal => normalizeVoiceText(animal.nome || '') === normalizedQuery);
+            if (exactMatches.length) return exactMatches;
+            return lactatingAnimals.filter(animal => normalizeVoiceText(animal.nome || '').includes(normalizedQuery));
+        }
+
+        function startVoiceMilkEntry() {
+            const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+            if (!SpeechRecognition) {
+                showCustomAlert(
+                    'Reconhecimento de Voz Indisponível',
+                    'Seu navegador não suporta reconhecimento de voz. Utilize o Google Chrome ou Microsoft Edge.',
+                    'danger'
+                );
+                return;
+            }
+
+            const recognition = new SpeechRecognition();
+            recognition.lang = 'pt-BR';
+            recognition.continuous = false;
+            recognition.interimResults = false;
+            recognition.maxAlternatives = 3;
+
+            if (DOM.btnLeiteVoz) {
+                DOM.btnLeiteVoz.disabled = true;
+                DOM.btnLeiteVoz.innerHTML = '<i class="ph ph-microphone"></i> Ouvindo...';
+            }
+            if (DOM.leiteVozFeedback) {
+                DOM.leiteVozFeedback.textContent = 'Diga o número ou nome do animal e a quantidade em litros.';
+                DOM.leiteVozFeedback.style.display = 'block';
+            }
+
+            recognition.onresult = (event) => {
+                const transcript = event.results[0][0].transcript;
+                const parsed = parseVoiceMilkCommand(transcript);
+                if (!parsed) {
+                    showCustomAlert('Comando não entendido', 'Fale o número ou nome do animal seguido da quantidade, por exemplo: “vaca 12, vinte litros”.', 'warning');
+                    return;
+                }
+
+                const matches = findLactatingAnimalByVoice(parsed.animalQuery);
+                if (matches.length !== 1) {
+                    const message = matches.length
+                        ? `Mais de um animal corresponde a “${escapeHtml(parsed.animalQuery)}”. Informe o número do animal para evitar um registro incorreto.`
+                        : `Não encontrei uma vaca em lactação com o número ou nome “${escapeHtml(parsed.animalQuery)}”.`;
+                    showCustomAlert('Animal não identificado', message, 'warning');
+                    return;
+                }
+
+                const animal = matches[0];
+                const previousAnimalId = DOM.leiteVacaSelect.value;
+                const previousQuantity = DOM.leiteQuantidadeInput.value;
+                DOM.leiteVacaSelect.value = String(animal.id);
+                DOM.leiteQuantidadeInput.value = String(parsed.quantity);
+                const mensagem = `Confirma registrar ${parsed.quantity} litro(s) para ${escapeHtml(formatAnimalId(animal.id))} - ${escapeHtml(animal.nome || 'Sem nome')}?`;
+                showCustomConfirm(
+                    'Confirmar produção de leite',
+                    mensagem,
+                    () => setTimeout(() => DOM.leiteForm.requestSubmit(), 350),
+                    () => {
+                        DOM.leiteVacaSelect.value = previousAnimalId;
+                        DOM.leiteQuantidadeInput.value = previousQuantity;
+                    }
+                );
+            };
+
+            recognition.onerror = (event) => {
+                if (event.error === 'no-speech') {
+                    showCustomAlert('Nenhuma fala detectada', 'Tente novamente falando próximo ao microfone.', 'warning');
+                } else if (event.error !== 'aborted') {
+                    showCustomAlert('Falha no reconhecimento de voz', 'Não foi possível reconhecer o comando. Verifique a permissão do microfone e tente novamente.', 'danger');
+                }
+            };
+
+            recognition.onend = () => {
+                if (DOM.btnLeiteVoz) {
+                    DOM.btnLeiteVoz.disabled = false;
+                    DOM.btnLeiteVoz.innerHTML = '<i class="ph ph-microphone"></i> Registrar por voz';
+                }
+            };
+
+            try {
+                recognition.start();
+            } catch (error) {
+                if (DOM.btnLeiteVoz) {
+                    DOM.btnLeiteVoz.disabled = false;
+                    DOM.btnLeiteVoz.innerHTML = '<i class="ph ph-microphone"></i> Registrar por voz';
+                }
+                showCustomAlert('Falha ao iniciar o microfone', 'Não foi possível iniciar o reconhecimento de voz. Tente novamente.', 'danger');
+                console.error('Falha ao iniciar reconhecimento de voz para produção de leite:', error);
+            }
+        }
+
         // Função para deletar registro de leite
         function deleteLeiteRegistro(registroId) {
             showCustomConfirm('Confirmar Exclusão', 'Tem certeza que deseja excluir este registro de produção de leite? Isso afetará o total da lactação.', () => {
@@ -4110,7 +4666,7 @@ function reclassifyHerdByAge() {
         }
 
         function prepararRegistroParto(animalId = null, dataPrevista = null, tarefaId = null) {
-            showSection('saude');
+            showSection('reproducao');
             if (DOM.partoMaeSelect && animalId) DOM.partoMaeSelect.value = String(animalId);
             if (DOM.partoDataInput) DOM.partoDataInput.value = dataPrevista || toIsoDate(new Date());
             if (DOM.partoTarefaId) DOM.partoTarefaId.value = tarefaId || '';
@@ -4192,26 +4748,453 @@ function reclassifyHerdByAge() {
             showCustomAlert('Parto registrado', `Parto de ${mae.nome} registrado. O nascido ${formatAnimalId(bezerroId)} foi adicionado ao total de animais.`, 'success');
         }
 
+        function findVoiceBirthMother(transcript) {
+            const namedMatches = findVoiceTaskAnimal(transcript);
+            if (namedMatches.matches.length) return namedMatches;
+
+            const normalizedText = normalizeTaskVoiceText(transcript);
+            const motherMatch = normalizedText.match(/\b(?:mae|vaca|animal|brinco|numero|id)\s+(.+?)(?=\s+(?:teve|pariu|deu|parto|nasceu|nascimento|dia|hoje|ontem|amanha|macho|femea|bezerro|bezerra|nome|peso|pesando|raca|observacao|observacoes|com)\b|[,;]|$)/);
+            if (!motherMatch) return { matches: [], phrase: '' };
+
+            const spokenId = motherMatch[1].trim();
+            const convertedId = /^\d+$/.test(spokenId)
+                ? String(parseInt(spokenId, 10))
+                : convertWordsToNumber(spokenId);
+            if (convertedId === null) return { matches: [], phrase: '' };
+
+            return {
+                matches: getAnimaisAtivos().filter(animal => String(animal.id) === convertedId),
+                phrase: motherMatch[0]
+            };
+        }
+
+        function parseVoiceBirthCommand(transcript) {
+            const mother = findVoiceBirthMother(transcript);
+            const date = findVoiceTaskDate(transcript);
+            const normalizedText = normalizeTaskVoiceText(transcript);
+            const sexMatch = normalizedText.match(/\b(femea|bezerra|macho|bezerro|indefinido)\b/);
+            if (mother.matches.length !== 1 || !date || !sexMatch) return null;
+
+            const sexo = ['femea', 'bezerra'].includes(sexMatch[1]) ? 'Fêmea'
+                : ['macho', 'bezerro'].includes(sexMatch[1]) ? 'Macho'
+                    : 'Indefinido';
+
+            let namedCalf = null;
+            const nameMatch = normalizedText.match(/\b(?:nome|chamado|chamada)\s+(.+?)(?=\s+(?:e\s+)?(?:peso|pesando|raca|observacao|observacoes)\b|[,;]|$)/);
+            if (nameMatch) {
+                namedCalf = {
+                    index: nameMatch.index,
+                    length: nameMatch[0].length,
+                    value: transcript.slice(nameMatch.index + nameMatch[0].indexOf(' ') + 1, nameMatch.index + nameMatch[0].length).trim()
+                };
+                namedCalf.value = namedCalf.value.replace(/^(?:do bezerro|da bezerra|do nascido|da nascida)\s+/i, '').trim();
+            }
+
+            let weight = null;
+            const weightMatch = normalizedText.match(/\b(?:peso|pesando)\s+(.+?)(?=\s+(?:kg|quilos?|quilogramas?|raca|observacao|observacoes)\b|[,;]|$)/);
+            if (weightMatch) {
+                const parsedWeight = parseVoiceMilkQuantity(weightMatch[1]);
+                if (parsedWeight !== null && Number.isFinite(parsedWeight) && parsedWeight >= 0) {
+                    weight = { index: weightMatch.index, length: weightMatch[0].length, value: parsedWeight };
+                    const unitMatch = normalizedText.slice(weightMatch.index + weightMatch[0].length).match(/^\s*(?:kg|quilos?|quilogramas?)/);
+                    if (unitMatch) weight.length += unitMatch[0].length;
+                }
+            }
+
+            const raceMatch = normalizedText.match(/\b(?:raca)\s+(.+?)(?=\s+(?:observacao|observacoes|com)\b|[,;]|$)/);
+            const race = raceMatch
+                ? {
+                    index: raceMatch.index,
+                    length: raceMatch[0].length,
+                    value: transcript.slice(raceMatch.index + raceMatch[0].indexOf(' ') + 1, raceMatch.index + raceMatch[0].length).trim()
+                }
+                : null;
+
+            const observationMatch = normalizedText.match(/\b(?:observacao|observacoes|nota|notas)\s+(.+)$/);
+            const ranges = [
+                { index: mother.phrase ? normalizedText.indexOf(mother.phrase) : -1, length: mother.phrase.length },
+                { index: date.index, length: date.length },
+                { index: sexMatch.index, length: sexMatch[0].length },
+                namedCalf && { index: namedCalf.index, length: namedCalf.length },
+                weight && { index: weight.index, length: weight.length },
+                race && { index: race.index, length: race.length },
+                observationMatch && { index: observationMatch.index, length: observationMatch[0].length }
+            ].filter(range => range && range.index >= 0).sort((a, b) => b.index - a.index);
+            let observacoes = transcript;
+            ranges.forEach(range => {
+                observacoes = observacoes.slice(0, range.index) + ' ' + observacoes.slice(range.index + range.length);
+            });
+            if (observationMatch) {
+                const markerLength = observationMatch[0].length - observationMatch[1].length;
+                observacoes = transcript.slice(observationMatch.index + markerLength).trim();
+            } else {
+                observacoes = observacoes
+                    .replace(/^\s*(?:(?:registrar|registro)\s+)?(?:o\s+)?(?:parto|nascimento)\s*(?:(?:da|do|de)\s+)?/i, '')
+                    .replace(/\b(?:nasceu|nascido|nascida)\b/gi, ' ')
+                    .replace(/^\s*(?:hoje|ontem|amanha|dia|em)\s+/i, '')
+                    .replace(/[,:;.!?]+/g, ' ')
+                    .replace(/\s+/g, ' ')
+                    .trim();
+            }
+
+            return {
+                mae: mother.matches[0],
+                data: date.value,
+                sexo,
+                nome: namedCalf && namedCalf.value,
+                peso: weight && weight.value,
+                raca: race && race.value,
+                observacoes
+            };
+        }
+
+        function startVoiceBirthEntry() {
+            const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+            if (!SpeechRecognition) {
+                showCustomAlert('Reconhecimento de Voz Indisponível', 'Seu navegador não suporta reconhecimento de voz. Utilize o Google Chrome ou Microsoft Edge.', 'danger');
+                return;
+            }
+
+            const recognition = new SpeechRecognition();
+            recognition.lang = 'pt-BR';
+            recognition.continuous = false;
+            recognition.interimResults = false;
+            recognition.maxAlternatives = 3;
+            DOM.btnPartoVoz.disabled = true;
+            DOM.btnPartoVoz.innerHTML = '<i class="ph ph-microphone"></i> Ouvindo...';
+
+            recognition.onresult = event => {
+                const transcript = event.results[0][0].transcript;
+                const parsed = parseVoiceBirthCommand(transcript);
+                if (!parsed) {
+                    showCustomAlert('Comando incompleto', 'Diga o nome ou número da vaca (use o número se houver nomes iguais), a data do parto e o sexo do nascido. Exemplo: “parto da vaca 12 hoje, nasceu fêmea, nome Luna, peso 32 quilos”.', 'warning');
+                    return;
+                }
+                if ((parsed.mae.sexo || '').toLowerCase() !== 'fêmea' && (parsed.mae.sexo || '').toLowerCase() !== 'femea') {
+                    showCustomAlert('Mãe inválida', 'O parto precisa ser registrado para uma fêmea cadastrada.', 'warning');
+                    return;
+                }
+
+                const previousValues = {
+                    mae: DOM.partoMaeSelect.value,
+                    data: DOM.partoDataInput.value,
+                    sexo: DOM.partoBezerroSexo.value,
+                    nome: DOM.partoBezerroNome.value,
+                    peso: DOM.partoBezerroPeso.value,
+                    raca: DOM.partoBezerroRaca.value,
+                    observacoes: DOM.partoObservacoes.value
+                };
+                DOM.partoMaeSelect.value = String(parsed.mae.id);
+                DOM.partoDataInput.value = parsed.data;
+                DOM.partoBezerroSexo.value = parsed.sexo;
+                DOM.partoBezerroNome.value = parsed.nome || '';
+                DOM.partoBezerroPeso.value = parsed.peso === null ? '' : String(parsed.peso);
+                DOM.partoBezerroRaca.value = parsed.raca || parsed.mae.raca || '';
+                DOM.partoObservacoes.value = parsed.observacoes;
+
+                const nomeBezerro = parsed.nome || gerarNomeNascimento(parsed.mae, parsed.sexo, parsed.data);
+                const pesoBezerro = parsed.peso === null ? 'não informado' : `${parsed.peso} kg`;
+                const dadosAdicionais = [
+                    `Raça: ${parsed.raca || parsed.mae.raca || 'herdada da mãe'}`,
+                    `Observações: ${parsed.observacoes || 'nenhuma'}`
+                ].join(' | ');
+                const confirmMessage = `Confirma registrar o parto de ${escapeHtml(formatAnimalId(parsed.mae.id))} - ${escapeHtml(parsed.mae.nome || 'Sem nome')} em ${formatDate(parsed.data)}? Nascido: ${escapeHtml(nomeBezerro)} (${escapeHtml(parsed.sexo)}), peso ${escapeHtml(pesoBezerro)}. ${escapeHtml(dadosAdicionais)}`;
+                showCustomConfirm(
+                    'Confirmar parto e nascimento',
+                    confirmMessage,
+                    () => setTimeout(() => DOM.partoForm.requestSubmit(), 350),
+                    () => {
+                        DOM.partoMaeSelect.value = previousValues.mae;
+                        DOM.partoDataInput.value = previousValues.data;
+                        DOM.partoBezerroSexo.value = previousValues.sexo;
+                        DOM.partoBezerroNome.value = previousValues.nome;
+                        DOM.partoBezerroPeso.value = previousValues.peso;
+                        DOM.partoBezerroRaca.value = previousValues.raca;
+                        DOM.partoObservacoes.value = previousValues.observacoes;
+                    }
+                );
+            };
+            recognition.onerror = event => {
+                if (event.error === 'no-speech') {
+                    showCustomAlert('Nenhuma fala detectada', 'Tente novamente falando próximo ao microfone.', 'warning');
+                } else if (event.error !== 'aborted') {
+                    showCustomAlert('Falha no reconhecimento de voz', 'Verifique a permissão do microfone e tente novamente.', 'danger');
+                }
+            };
+            recognition.onend = () => {
+                DOM.btnPartoVoz.disabled = false;
+                DOM.btnPartoVoz.innerHTML = '<i class="ph ph-microphone"></i> Registrar parto por voz';
+            };
+
+            try {
+                recognition.start();
+            } catch (error) {
+                DOM.btnPartoVoz.disabled = false;
+                DOM.btnPartoVoz.innerHTML = '<i class="ph ph-microphone"></i> Registrar parto por voz';
+                showCustomAlert('Falha ao iniciar o microfone', 'Não foi possível iniciar o reconhecimento de voz. Tente novamente.', 'danger');
+                console.error('Falha ao iniciar reconhecimento de voz para registro de parto:', error);
+            }
+        }
+
         // Função para salvar nova tarefa
         function saveTarefa(event) {
             event.preventDefault();
+            const form = event.currentTarget;
+            const animalId = parseInt(form.elements.animalId.value, 10);
+            const animal = rebanhoData.animais.find(a => a.id === animalId);
+            if (!animal) {
+                showCustomAlert('Animal não encontrado', 'Selecione um animal válido para a tarefa.', 'warning');
+                return;
+            }
 
             const novaTarefa = {
                 id: Date.now(),
-                animalId: parseInt(DOM.tarefaAnimalSelect.value),
-                tipo: DOM.tarefaTipoSelect.value,
-                data: DOM.tarefaData.value, // Data limite ou previsão
-                descricao: DOM.tarefaDescricao.value,
+                animalId,
+                tipo: form.elements.tipo.value,
+                categoria: form.dataset.tarefaCategoria,
+                data: form.elements.data.value,
+                descricao: form.elements.descricao.value.trim(),
                 done: false,
                 dataConclusao: null,
             };
 
             rebanhoData.tarefas.push(novaTarefa);
             saveData();
-            DOM.tarefaForm.reset();
+            form.reset();
+            form.elements.data.value = toIsoDate(new Date());
             renderTarefaList();
             updateDashboard();
             showCustomAlert('Sucesso', 'Nova tarefa adicionada!', 'success');
+        }
+
+        function getTaskCategory(tarefa) {
+            if (tarefa.categoria === 'saude' || tarefa.categoria === 'reproducao') return tarefa.categoria;
+            return ['cio', 'parto', 'cobertura', 'diagnostico'].includes(tarefa.tipo) ? 'reproducao' : 'saude';
+        }
+
+        function normalizeTaskVoiceText(text) {
+            return text.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+        }
+
+        function findVoiceTaskAnimal(text) {
+            const normalizedText = normalizeTaskVoiceText(text);
+            const activeAnimals = getAnimaisAtivos();
+            const nameMatches = activeAnimals
+                .map(animal => ({ animal, name: normalizeTaskVoiceText(animal.nome || '') }))
+                .filter(({ name }) => {
+                    if (!name) return false;
+                    let index = normalizedText.indexOf(name);
+                    while (index >= 0) {
+                        const before = index > 0 ? normalizedText[index - 1] : '';
+                        const after = normalizedText[index + name.length] || '';
+                        if (!/[a-z0-9]/.test(before) && !/[a-z0-9]/.test(after)) return true;
+                        index = normalizedText.indexOf(name, index + 1);
+                    }
+                    return false;
+                })
+                .sort((a, b) => b.name.length - a.name.length);
+
+            if (nameMatches.length) {
+                const longestName = nameMatches[0].name;
+                const matches = nameMatches.filter(match => match.name.length === longestName.length);
+                return { matches: matches.map(match => match.animal), phrase: longestName };
+            }
+
+            const taskStart = normalizedText.search(/\b(?:vacina|vermifugo|cio|parto|cobertura|inseminacao|diagnostico|outro)\b/);
+            const animalText = (taskStart >= 0 ? normalizedText.slice(0, taskStart) : normalizedText)
+                .match(/\b(?:animal|vaca|boi|touro|novilha|novilho|bezerro|bezerra|brinco|numero|id)\s+([^,;]+)/);
+            if (!animalText) return { matches: [], phrase: '' };
+
+            const spokenIdText = animalText[1]
+                .replace(/\b(?:de|para|em|no|na)\b.*$/, '')
+                .trim();
+            const convertedId = /^\d+$/.test(spokenIdText)
+                ? String(parseInt(spokenIdText, 10))
+                : convertWordsToNumber(spokenIdText);
+            if (convertedId === null) return { matches: [], phrase: '' };
+
+            const matches = activeAnimals.filter(animal => String(animal.id) === convertedId);
+            return { matches, phrase: animalText[0].trim() };
+        }
+
+        function findVoiceTaskType(text, category) {
+            const normalizedText = normalizeTaskVoiceText(text);
+            const keywords = {
+                vacina: ['vacinacao', 'vacina'],
+                vermifugo: ['vermifugacao', 'vermifugo', 'vermifugar'],
+                cio: ['previsao de cio', 'cio'],
+                parto: ['previsao de parto', 'parto'],
+                cobertura: ['inseminacao', 'cobertura'],
+                diagnostico: ['diagnostico de gestacao', 'diagnostico'],
+                outro: ['outro cuidado', 'outro']
+            };
+            const validTypes = category === 'reproducao'
+                ? ['cio', 'parto', 'cobertura', 'diagnostico']
+                : ['vacina', 'vermifugo', 'outro'];
+            const matches = [];
+
+            validTypes.forEach(type => keywords[type].forEach(keyword => {
+                const index = normalizedText.indexOf(keyword);
+                if (index >= 0) matches.push({ type, index, length: keyword.length, keyword });
+            }));
+            matches.sort((a, b) => b.length - a.length || a.index - b.index);
+            return matches[0] || null;
+        }
+
+        function findVoiceTaskDate(text) {
+            const normalizedText = normalizeTaskVoiceText(text);
+            const today = new Date();
+            const relativeDate = normalizedText.match(/\b(hoje|amanha|ontem)\b/);
+            if (relativeDate) {
+                const dayOffset = relativeDate[1] === 'amanha' ? 1 : relativeDate[1] === 'ontem' ? -1 : 0;
+                const date = new Date(today.getFullYear(), today.getMonth(), today.getDate() + dayOffset);
+                return { value: toIsoDate(date), index: relativeDate.index, length: relativeDate[0].length };
+            }
+
+            const monthNames = {
+                janeiro: 0, fevereiro: 1, marco: 2, abril: 3, maio: 4, junho: 5,
+                julho: 6, agosto: 7, setembro: 8, outubro: 9, novembro: 10, dezembro: 11
+            };
+            let match = normalizedText.match(/\b(\d{4})-(\d{1,2})-(\d{1,2})\b/);
+            if (match) {
+                const date = new Date(Number(match[1]), Number(match[2]) - 1, Number(match[3]));
+                if (date.getFullYear() === Number(match[1]) && date.getMonth() === Number(match[2]) - 1 && date.getDate() === Number(match[3])) {
+                    return { value: toIsoDate(date), index: match.index, length: match[0].length };
+                }
+                return null;
+            }
+
+            match = normalizedText.match(/\b(\d{1,2})[/-](\d{1,2})(?:[/-](\d{4}))?\b/);
+            if (match) {
+                const year = match[3] ? Number(match[3]) : today.getFullYear();
+                const date = new Date(year, Number(match[2]) - 1, Number(match[1]));
+                if (date.getFullYear() === year && date.getMonth() === Number(match[2]) - 1 && date.getDate() === Number(match[1])) {
+                    return { value: toIsoDate(date), index: match.index, length: match[0].length };
+                }
+                return null;
+            }
+
+            const monthPattern = Object.keys(monthNames).join('|');
+            match = normalizedText.match(new RegExp(`\\b(?:dia\\s+)?([a-z0-9]+)\\s+(?:de\\s+)?(${monthPattern})(?:\\s+de?\\s+(\\d{4}))?\\b`));
+            if (!match) return null;
+
+            const day = /^\d+$/.test(match[1]) ? Number(match[1]) : Number(convertWordsToNumber(match[1]));
+            const month = monthNames[match[2]];
+            const year = match[3] ? Number(match[3]) : today.getFullYear();
+            if (!Number.isInteger(day) || day < 1 || day > 31) return null;
+
+            let date = new Date(year, month, day);
+            if (!match[3] && date < new Date(today.getFullYear(), today.getMonth(), today.getDate())) {
+                date = new Date(year + 1, month, day);
+            }
+            if (date.getMonth() !== month || date.getDate() !== day) return null;
+            return { value: toIsoDate(date), index: match.index, length: match[0].length };
+        }
+
+        function parseVoiceTaskCommand(transcript, category) {
+            const animal = findVoiceTaskAnimal(transcript);
+            const taskType = findVoiceTaskType(transcript, category);
+            const taskDate = findVoiceTaskDate(transcript);
+            if (animal.matches.length !== 1 || !taskType || !taskDate) return null;
+
+            let description = transcript;
+            const ranges = [
+                { index: animal.phrase ? normalizeTaskVoiceText(transcript).indexOf(animal.phrase) : -1, length: animal.phrase.length },
+                { index: taskType.index, length: taskType.length },
+                { index: taskDate.index, length: taskDate.length }
+            ].filter(range => range.index >= 0).sort((a, b) => b.index - a.index);
+            ranges.forEach(range => {
+                description = description.slice(0, range.index) + ' ' + description.slice(range.index + range.length);
+            });
+            description = description
+                .replace(/[,:;.!?]+/g, ' ')
+                .replace(/\s+/g, ' ')
+                .replace(/^(?:(?:animal|vaca|boi|touro|novilha|novilho|bezerro|bezerra|brinco|numero|id)\s+)?(?:para|no dia|dia|em|de|do|da|favor|agendar|agendada|agendado|e)\s+/i, '')
+                .trim();
+
+            return {
+                animal: animal.matches[0],
+                tipo: taskType.type,
+                data: taskDate.value,
+                descricao: description || `Tarefa de ${taskType.type} agendada por comando de voz.`
+            };
+        }
+
+        function startVoiceTaskEntry(button) {
+            const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+            if (!SpeechRecognition) {
+                showCustomAlert('Reconhecimento de Voz Indisponível', 'Seu navegador não suporta reconhecimento de voz. Utilize o Google Chrome ou Microsoft Edge.', 'danger');
+                return;
+            }
+
+            const form = button.closest('.tarefa-form');
+            if (!form) {
+                showCustomAlert('Erro', 'Não foi possível localizar o formulário de tarefa.', 'danger');
+                return;
+            }
+
+            const recognition = new SpeechRecognition();
+            recognition.lang = 'pt-BR';
+            recognition.continuous = false;
+            recognition.interimResults = false;
+            recognition.maxAlternatives = 3;
+            button.disabled = true;
+            button.innerHTML = '<i class="ph ph-microphone"></i> Ouvindo...';
+
+            recognition.onresult = event => {
+                const transcript = event.results[0][0].transcript;
+                const parsed = parseVoiceTaskCommand(transcript, form.dataset.tarefaCategoria);
+                if (!parsed) {
+                    showCustomAlert('Comando incompleto', 'Diga o animal (nome ou número), o tipo de tarefa e a data. Exemplo: “animal 12, vacina, dia 20 de outubro, aplicar vacina contra aftosa”.', 'warning');
+                    return;
+                }
+
+                const animalSelect = form.elements.animalId;
+                const previousValues = {
+                    animalId: animalSelect.value,
+                    tipo: form.elements.tipo.value,
+                    data: form.elements.data.value,
+                    descricao: form.elements.descricao.value
+                };
+                animalSelect.value = String(parsed.animal.id);
+                form.elements.tipo.value = parsed.tipo;
+                form.elements.data.value = parsed.data;
+                form.elements.descricao.value = parsed.descricao;
+
+                const tipoLabel = form.elements.tipo.selectedOptions[0].textContent;
+                const confirmation = `Confirma adicionar “${escapeHtml(tipoLabel)}” para ${escapeHtml(formatAnimalId(parsed.animal.id))} - ${escapeHtml(parsed.animal.nome || 'Sem nome')}, em ${formatDate(parsed.data)}? Detalhes: ${escapeHtml(parsed.descricao)}`;
+                showCustomConfirm(
+                    'Confirmar tarefa por voz',
+                    confirmation,
+                    () => setTimeout(() => form.requestSubmit(), 350),
+                    () => {
+                        animalSelect.value = previousValues.animalId;
+                        form.elements.tipo.value = previousValues.tipo;
+                        form.elements.data.value = previousValues.data;
+                        form.elements.descricao.value = previousValues.descricao;
+                    }
+                );
+            };
+            recognition.onerror = event => {
+                if (event.error === 'no-speech') {
+                    showCustomAlert('Nenhuma fala detectada', 'Tente novamente falando próximo ao microfone.', 'warning');
+                } else if (event.error !== 'aborted') {
+                    showCustomAlert('Falha no reconhecimento de voz', 'Verifique a permissão do microfone e tente novamente.', 'danger');
+                }
+            };
+            recognition.onend = () => {
+                button.disabled = false;
+                button.innerHTML = '<i class="ph ph-microphone"></i> Preencher por voz';
+            };
+
+            try {
+                recognition.start();
+            } catch (error) {
+                button.disabled = false;
+                button.innerHTML = '<i class="ph ph-microphone"></i> Preencher por voz';
+                showCustomAlert('Falha ao iniciar o microfone', 'Não foi possível iniciar o reconhecimento de voz. Tente novamente.', 'danger');
+                console.error('Falha ao iniciar reconhecimento de voz para tarefas:', error);
+            }
         }
 
         // Função para marcar tarefa como realizada
@@ -4920,35 +5903,38 @@ function reclassifyHerdByAge() {
             });
         }
         
-        // Renderiza a lista de tarefas pendentes na seção "Saúde"
+        // Renderiza as listas separadas de tarefas de saúde e reprodução
         function renderTarefaList() {
-            const tbody = DOM.tarefaListTbody;
-            tbody.innerHTML = '';
-            
-            // Filtra e ordena as tarefas pendentes
             const tarefasPendentes = rebanhoData.tarefas
                 .filter(t => !t.done)
-                .sort((a, b) => parseLocalDate(a.data) - parseLocalDate(b.data)); // Ordena pela data mais próxima
+                .sort((a, b) => parseLocalDate(a.data) - parseLocalDate(b.data));
 
-            tarefasPendentes.forEach(tarefa => {
-                const animalName = getAnimalName(tarefa.animalId);
-                const isLate = new Date(tarefa.data) < new Date().setHours(0,0,0,0);
-                
-                const row = tbody.insertRow();
-                row.className = isLate ? 'table-danger' : ''; // Estilo para tarefas atrasadas
-                row.innerHTML = `
-                    <td>${formatDate(tarefa.data)}</td>
-                    <td>${animalName}</td>
-                    <td>${tarefa.tipo.charAt(0).toUpperCase() + tarefa.tipo.slice(1)}</td>
-                    <td>${tarefa.descricao}</td>
-                    <td>
-                        <button class="btn btn-success btn-sm" onclick="event.stopPropagation(); markTarefaAsDone(${tarefa.id})"><i class="ph ph-check"></i></button>
-                        <button class="btn btn-danger btn-sm" onclick="event.stopPropagation(); deleteTarefa(${tarefa.id})"><i class="ph ph-trash"></i></button>
-                    </td>
-                `;
+            Object.entries(DOM.tarefaListBodies).forEach(([category, tbody]) => {
+                if (!tbody) return;
+                tbody.innerHTML = '';
+                const tarefasDaCategoria = tarefasPendentes.filter(tarefa => getTaskCategory(tarefa) === category);
+                tarefasDaCategoria.forEach(tarefa => {
+                    const animal = rebanhoData.animais.find(a => a.id === tarefa.animalId);
+                    const animalLabel = animal
+                        ? `${formatAnimalId(animal.id)} - ${animal.nome || 'Sem nome'}`
+                        : 'Animal Desconhecido';
+                    const dueDate = parseLocalDate(tarefa.data);
+                    const isLate = dueDate ? dueDate < new Date().setHours(0, 0, 0, 0) : false;
+                    const row = tbody.insertRow();
+                    row.className = isLate ? 'table-danger' : '';
+                    row.innerHTML = `
+                        <td>${formatDate(tarefa.data)}</td>
+                        <td>${escapeHtml(animalLabel)}</td>
+                        <td>${escapeHtml(tarefa.tipo.charAt(0).toUpperCase() + tarefa.tipo.slice(1))}</td>
+                        <td>${escapeHtml(tarefa.descricao)}</td>
+                        <td>
+                            <button class="btn btn-success btn-sm" onclick="event.stopPropagation(); markTarefaAsDone(${tarefa.id})"><i class="ph ph-check"></i></button>
+                            <button class="btn btn-danger btn-sm" onclick="event.stopPropagation(); deleteTarefa(${tarefa.id})"><i class="ph ph-trash"></i></button>
+                        </td>
+                    `;
+                });
             });
-            
-            // Atualiza a lista de tarefas no Dashboard
+
             renderProximasTarefas(tarefasPendentes.slice(0, 5));
         }
         
@@ -5055,13 +6041,16 @@ function reclassifyHerdByAge() {
                 DOM.leiteVacaSelect.appendChild(option);
             });
             
-            // Limpa e repopula o select de tarefas (inclui todos os animais)
-            DOM.tarefaAnimalSelect.innerHTML = '<option value="">Selecione o Animal...</option>';
-            getAnimaisAtivos().forEach(animal => {
-                const option = document.createElement('option');
-                option.value = animal.id;
-                option.textContent = `${formatAnimalId(animal.id)} - ${animal.nome}`;
-                DOM.tarefaAnimalSelect.appendChild(option);
+            DOM.tarefaAnimalSelects.forEach(select => {
+                const selectedAnimalId = select.value;
+                select.innerHTML = '<option value="">Selecione o Animal...</option>';
+                getAnimaisAtivos().forEach(animal => {
+                    const option = document.createElement('option');
+                    option.value = animal.id;
+                    option.textContent = `${formatAnimalId(animal.id)} - ${animal.nome || 'Sem nome'}`;
+                    select.appendChild(option);
+                });
+                select.value = selectedAnimalId;
             });
              populatePartoMaeSelect();
              populateParentSelects();
@@ -6917,7 +7906,12 @@ Os dados atuais serão substituídos.`);
             // Formulários
             DOM.animalForm.addEventListener('submit', saveAnimal);
             DOM.leiteForm.addEventListener('submit', saveLeite);
-            DOM.tarefaForm.addEventListener('submit', saveTarefa);
+            if (DOM.btnLeiteVoz) DOM.btnLeiteVoz.addEventListener('click', startVoiceMilkEntry);
+            DOM.tarefaForms.forEach(form => form.addEventListener('submit', saveTarefa));
+            DOM.tarefaVoiceButtons.forEach(button => {
+                button.addEventListener('click', () => startVoiceTaskEntry(button));
+            });
+            if (DOM.btnPartoVoz) DOM.btnPartoVoz.addEventListener('click', startVoiceBirthEntry);
             if (DOM.partoForm) DOM.partoForm.addEventListener('submit', saveParto);
             if (DOM.baixaForm) DOM.baixaForm.addEventListener('submit', saveBaixaAnimal);
             if (DOM.baixaTipoSelect) DOM.baixaTipoSelect.addEventListener('change', toggleBaixaFields);
@@ -7045,6 +8039,9 @@ Os dados atuais serão substituídos.`);
                 if (e.key === 'Escape' && DOM.modalIdentificarAnimal?.style.display === 'flex') {
                     closeIdentificarAnimal(true);
                 }
+                if (e.key === 'Escape' && DOM.modalPreviewRelatorio?.style.display === 'flex') {
+                    closeReportPdfPreview();
+                }
             });
 
             // Modais de Importação
@@ -7079,6 +8076,7 @@ Os dados atuais serão substituídos.`);
                 DOM.modalRelatoriosPdf.style.display = 'flex';
                 // Limpar filtros e selecionar o primeiro item ao abrir
                 DOM.formRelatorioPdf.reset();
+                populateReportAnimalSelect();
                 DOM.tipoRelatorioSelect.value = ''; // Garante que o select 'Selecione o Tipo...' está ativo
                 toggleRelatorioFilters();
             });
@@ -7090,10 +8088,16 @@ Os dados atuais serão substituídos.`);
                     showCustomAlert('Erro', 'Por favor, selecione um tipo de relatório.', 'warning');
                     return;
                 }
+                if (tipo === 'ficha-animal' && !DOM.filtroFichaAnimal.value) {
+                    showCustomAlert('Animal não selecionado', 'Selecione um animal para gerar a ficha individual.', 'warning');
+                    return;
+                }
                 const filtros = collectRelatorioFilters(tipo);
-                DOM.modalRelatoriosPdf.style.display = 'none';
                 generateReportPdf(tipo, filtros);
             });
+            DOM.btnFecharPreviewRelatorio.addEventListener('click', closeReportPdfPreview);
+            DOM.btnCancelarPreviewRelatorio.addEventListener('click', closeReportPdfPreview);
+            DOM.btnBaixarPreviewRelatorio.addEventListener('click', downloadReportPdfPreview);
         }
 
         async function initialSetup() {
@@ -7104,7 +8108,9 @@ Os dados atuais serão substituídos.`);
             showSection('dashboard');
             DOM.currentIdPrefix.textContent = localStorage.getItem('idPrefix') || 'ID';
             DOM.leiteDataInput.value = new Date().toISOString().split('T')[0];
-            DOM.tarefaData.value = new Date().toISOString().split('T')[0];
+            DOM.tarefaForms.forEach(form => {
+                form.elements.data.value = toIsoDate(new Date());
+            });
             if (DOM.partoDataInput) DOM.partoDataInput.value = new Date().toISOString().split('T')[0];
             if (DOM.baixaDataInput) DOM.baixaDataInput.value = new Date().toISOString().split('T')[0];
             
